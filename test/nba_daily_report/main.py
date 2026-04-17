@@ -4,11 +4,12 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+import yaml
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -16,26 +17,20 @@ logger = logging.getLogger(__name__)
 import anthropic
 from nba_api.live.nba.endpoints import boxscore, scoreboard
 
-DEFAULT_REGION = "us-east-1"
-BEDROCK_MODEL = "us.anthropic.claude-sonnet-4-6"
-OUTPUT_DIR = Path(__file__).parent / "report"
+from utils.aws_auth import setup_aws_session
 
-SYSTEM_PROMPT = """你是一位資深 NBA 球評與數據分析師，擅長用清晰、具洞察力的繁體中文撰寫每日戰報。
+PROJECT_DIR = Path(__file__).parent
 
-請根據使用者提供的當日 NBA 比賽資料 (JSON)，撰寫一份結構化的 Markdown 報告，內容必須包含以下五個段落 (使用 Markdown 二級標題 `##`)：
 
-1. **當日戰況總覽** — 用 1~2 段文字概述當天比賽數量、重大賽果、勝負亮點。
-2. **值得注意的看點** — 條列 3~6 點，說明值得球迷關注的比賽、對位、趨勢。
-3. **關鍵數據** — 條列球員或球隊層級的亮眼數據 (大三元、單場高分、罕見紀錄等)，引用具體數字。
-4. **特殊事件** — 逆轉、加時、絕殺、里程碑、爭議判決等。若資料中不明顯，說明「暫無特別事件」。
-5. **重要人事異動** — 若資料中有顯示交易、簽約、教練異動或傷兵名單異動，彙整於此；若無相關資訊，請註明「本日資料未包含人事異動資訊」。
+def load_config() -> dict:
+    config_path = PROJECT_DIR / "config.yaml"
+    with open(config_path, encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
-寫作原則：
-- 語氣專業但不枯燥，適度使用球迷語彙。
-- 引用數據要具體 (例如「Doncic 35 分 12 助攻 10 籃板完成大三元」)。
-- 不要杜撰資料中沒有的資訊。
-- 如果當日沒有任何比賽，就簡短說明，不需填充內容。
-"""
+
+def load_system_prompt(config: dict) -> str:
+    prompt_file = PROJECT_DIR / config["claude"]["system_prompt_file"]
+    return prompt_file.read_text(encoding="utf-8").strip()
 
 
 def fetch_todays_games() -> list[dict]:
@@ -115,37 +110,24 @@ def build_games_payload(games: list[dict]) -> list[dict]:
     return payload
 
 
-def summarize_with_claude(games_payload: list[dict], report_date: str, aws_region: str) -> str:
+def summarize_with_claude(
+    games_payload: list[dict], report_date: str, aws_region: str, config: dict, system_prompt: str,
+) -> str:
     client = anthropic.AnthropicBedrock(aws_region=aws_region)
+    bedrock_model = config["aws"]["bedrock_model"]
+    max_tokens = config["claude"]["max_tokens"]
     user_prompt = (
         f"以下是 {report_date} (美東時間) 的 NBA 比賽資料，請依系統指示撰寫繁體中文每日戰報。\n\n"
         f"```json\n{json.dumps(games_payload, ensure_ascii=False, indent=2)}\n```"
     )
     with client.messages.stream(
-        model=BEDROCK_MODEL,
-        max_tokens=8000,
-        system=SYSTEM_PROMPT,
+        model=bedrock_model,
+        max_tokens=max_tokens,
+        system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
     ) as stream:
         final = stream.get_final_message()
     return "".join(b.text for b in final.content if b.type == "text")
-
-
-def get_mfa_credentials(mfa_serial: str, token_code: str, region: str, profile: str | None = None) -> None:
-    """Call STS GetSessionToken with MFA and export temp credentials to env."""
-    import boto3
-
-    session = boto3.Session(profile_name=profile, region_name=region)
-    sts = session.client("sts")
-    resp = sts.get_session_token(
-        SerialNumber=mfa_serial,
-        TokenCode=token_code,
-    )
-    creds = resp["Credentials"]
-    os.environ["AWS_ACCESS_KEY_ID"] = creds["AccessKeyId"]
-    os.environ["AWS_SECRET_ACCESS_KEY"] = creds["SecretAccessKey"]
-    os.environ["AWS_SESSION_TOKEN"] = creds["SessionToken"]
-    print(f"      MFA 臨時憑證取得成功，有效至 {creds['Expiration']}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -165,23 +147,21 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    config = load_config()
+    system_prompt = load_system_prompt(config)
+
+    default_region = config["aws"]["default_region"]
+    bedrock_model = config["aws"]["bedrock_model"]
+    output_dir = PROJECT_DIR / config["output"]["dir"]
 
     if args.profile:
         print(f"[*] 使用 AWS profile: {args.profile}")
 
-    import botocore.session
-    session = botocore.session.Session(profile=args.profile)
-    profile_cfg = session.get_scoped_config()
-    aws_region = args.region or profile_cfg.get("region", DEFAULT_REGION)
-    mfa_serial = profile_cfg.get("mfa_serial") or os.getenv("AWS_MFA_SERIAL")
-
-    if mfa_serial:
-        token_code = input("請輸入 MFA 驗證碼 (6 碼): ").strip()
-        if not token_code:
-            logger.error("MFA 驗證碼不可為空")
-            return 1
-        print("[0/3] 取得 MFA 臨時憑證 ...")
-        get_mfa_credentials(mfa_serial, token_code, aws_region, args.profile)
+    try:
+        aws_region = setup_aws_session(args.profile, args.region, default_region)
+    except ValueError as e:
+        logger.error("%s", e)
+        return 1
 
     et_now = datetime.now(ZoneInfo("US/Eastern"))
     report_date = et_now.strftime("%Y-%m-%d")
@@ -192,15 +172,15 @@ def main() -> int:
 
     payload = build_games_payload(games)
 
-    print(f"[2/3] 呼叫 Claude ({BEDROCK_MODEL}) 彙整報告 ...")
+    print(f"[2/3] 呼叫 Claude ({bedrock_model}) 彙整報告 ...")
     if not payload:
         report = f"# NBA 每日戰報 — {report_date}\n\n本日美東時間暫無 NBA 賽事。\n"
     else:
-        summary = summarize_with_claude(payload, report_date, aws_region)
+        summary = summarize_with_claude(payload, report_date, aws_region, config, system_prompt)
         report = f"# NBA 每日戰報 — {report_date}\n\n{summary}\n"
 
-    OUTPUT_DIR.mkdir(exist_ok=True)
-    out_path = OUTPUT_DIR / f"nba_daily_report_{report_date}.md"
+    output_dir.mkdir(exist_ok=True)
+    out_path = output_dir / f"nba_daily_report_{report_date}.md"
     out_path.write_text(report, encoding="utf-8")
     print(f"[3/3] 已寫入：{out_path}")
     return 0

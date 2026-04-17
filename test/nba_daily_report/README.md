@@ -18,14 +18,49 @@
 - 特殊事件
 - 重要人事異動（若 API 無相關資訊，會明確註明）
 
+## 程式流程
+
+```mermaid
+flowchart TD
+    A[開始] --> B[載入 config.yaml\n& system_prompt.md]
+    B --> C{有指定\n--profile?}
+    C -->|Yes| D[讀取 AWS profile 設定]
+    C -->|No| D
+    D --> E{profile 或環境變數\n有 mfa_serial?}
+    E -->|Yes| F[輸入 MFA 驗證碼]
+    F --> G[STS GetSessionToken\n取得臨時憑證]
+    G --> H
+    E -->|No| H[取得美東時間當日日期]
+    H --> I[NBA API: Scoreboard\n取得當日比賽列表]
+    I --> J{有比賽?}
+    J -->|No| K[產生「本日無賽事」報告]
+    J -->|Yes| L[遍歷每場比賽]
+    L --> M{已完賽?}
+    M -->|Yes| N[NBA API: BoxScore\n取得球員數據]
+    N --> O[組裝 JSON payload]
+    M -->|No| O
+    O --> P[Claude Sonnet via Bedrock\n彙整繁體中文戰報]
+    P --> Q[寫入 report/ 目錄\nnba_daily_report_日期.md]
+    K --> Q
+    Q --> R[結束]
+```
+
 ## 專案結構
 
 ```
-nba_daily_report/
-├── main.py              # 主程式入口
-├── requirements.txt     # Python 依賴
-├── README.md            # 本文件
-└── report/              # 產出的每日戰報 (.md) 存放處
+my_ai/
+├── utils/
+│   ├── __init__.py
+│   └── aws_auth.py              # 共用 AWS MFA 認證模組
+├── test/
+│   └── nba_daily_report/
+│       ├── main.py              # 主程式入口
+│       ├── config.yaml          # 設定檔 (模型、region、輸出路徑等)
+│       ├── system_prompt.md     # Claude 的系統提示詞
+│       ├── requirements.txt     # Python 依賴
+│       ├── README.md            # 本文件
+│       └── report/              # 產出的每日戰報 (.md) 存放處
+└── my_ai_venv/                  # 虛擬環境
 ```
 
 ## 安裝
@@ -39,8 +74,7 @@ nba_daily_report/
 source my_ai_venv/bin/activate
 
 # 首次安裝依賴（已安裝過可跳過）
-cd test/nba_daily_report
-pip install -r requirements.txt
+pip install -r test/nba_daily_report/requirements.txt
 ```
 
 ## 設定
@@ -60,22 +94,32 @@ aws configure
 
 ### MFA 認證（組織 SCP 要求 MFA）
 
-如果組織的 SCP 規則要求 MFA 才能操作，設定 MFA 裝置的 ARN：
+如果組織的 SCP 規則要求 MFA 才能操作，有兩種方式設定 MFA 裝置 ARN：
+
+**方式 1（推薦）：** 寫在 `~/.aws/config` 的 profile 中：
+
+```ini
+[profile cathay-dt-lab]
+region = ap-southeast-1
+mfa_serial = arn:aws:iam::393326654921:mfa/YOUR_IAM_USER
+```
+
+**方式 2：** 透過環境變數：
 
 ```bash
 export AWS_MFA_SERIAL=arn:aws:iam::393326654921:mfa/YOUR_IAM_USER
 ```
 
-設定後，程式執行時會提示你輸入 6 碼 MFA 驗證碼，自動透過 STS 取得臨時憑證（預設有效 12 小時）。
+設定後，程式執行時會自動提示輸入 6 碼 MFA 驗證碼，透過 STS 取得臨時憑證（預設有效 12 小時）。此認證邏輯由共用模組 `utils/aws_auth.py` 的 `setup_aws_session()` 處理。
 
-若沒設 `AWS_MFA_SERIAL`，程式會直接使用現有的 AWS credential chain（適合已經有 MFA session 或不需要 MFA 的環境）。
+若兩者都未設定，程式會直接使用現有的 AWS credential chain（適合已經有 MFA session 或不需要 MFA 的環境）。
 
 ## 使用
 
-確認已啟用虛擬環境（提示符前方應顯示 `(my_ai_venv)`），再執行：
+確認已啟用虛擬環境（提示符前方應顯示 `(my_ai_venv)`），從專案根目錄 `my_ai/` 執行：
 
 ```bash
-python main.py --profile cathay-dt-lab --region us-east-1
+python -m test.nba_daily_report.main --profile cathay-dt-lab --region us-east-1
 ```
 
 執行範例輸出（有 MFA）：
@@ -97,7 +141,7 @@ python main.py --profile cathay-dt-lab --region us-east-1
 - **時區**：NBA 賽程以美東時間 (US/Eastern) 為基準，因此「當日」以 ET 為準，而非台灣時區。
 - **資料來源**：只使用官方 Live 端點；進行中或未開賽的比賽僅帶出比分與隊伍資訊，不拉 box score。
 - **模型選擇**：透過 AWS Bedrock 使用 `us.anthropic.claude-sonnet-4-6`，呼叫時採用 streaming 以避免長輸出 timeout。
-- **MFA 支援**：設定 `AWS_MFA_SERIAL` 環境變數後，程式會互動式詢問 MFA 驗證碼，透過 STS `GetSessionToken` 取得臨時憑證，符合 SCP 的 MFA 要求。
+- **MFA 支援**：透過 `utils/aws_auth.setup_aws_session()` 共用模組處理，自動偵測 profile config 的 `mfa_serial` 或環境變數 `AWS_MFA_SERIAL`，互動式詢問驗證碼後透過 STS 取得臨時憑證。
 - **人事異動資料**：NBA API 並不提供交易、簽約、教練異動等資訊，因此系統提示要求模型在資料缺乏時明確註明，不可虛構。
 - **無賽事處理**：若當日沒有任何比賽，跳過 API 呼叫，直接輸出簡短說明。
 
