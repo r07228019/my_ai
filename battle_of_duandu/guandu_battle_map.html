@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>官渡之戰形勢圖</title>
+<style>
+  body { font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; background:#f8f6f0; margin:0; padding:20px; }
+  h2 { text-align:center; font-size:20px; font-weight:600; color:#2c2c2a; margin-bottom:16px; }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:14px; }
+  .pbtn { cursor:pointer; padding:6px 14px; border-radius:6px; border:1px solid #b4b2a9; background:#f1efe8; color:#5f5e5a; font-size:13px; transition:all .2s; font-family:inherit; }
+  .pbtn.active { background:#3B8BD4; color:#fff; border-color:#185FA5; font-weight:500; }
+  .pbtn:hover:not(.active) { background:#e3e1d8; }
+  svg { display:block; width:100%; max-width:760px; margin:0 auto; }
+  #desc-box { max-width:740px; margin:12px auto 0; padding:10px 16px; background:#fff; border-radius:8px; border:1px solid #d3d1c7; font-size:13px; color:#5f5e5a; line-height:1.8; }
+  @keyframes march { 0%{stroke-dashoffset:500} 100%{stroke-dashoffset:0} }
+  @keyframes pulse { 0%,100%{r:6} 50%{r:10} }
+  @keyframes fin { from{opacity:0} to{opacity:1} }
+  .ml { stroke-dasharray:500; stroke-dashoffset:500; animation:march 1.8s ease-out forwards; }
+  .bp { animation:pulse 1.2s ease-in-out infinite; }
+  .fi { animation:fin .6s ease-out forwards; }
+</style>
+</head>
+<body>
+<h2>官渡之戰形勢圖（西元 200 年）</h2>
+<div class="controls" id="pc">
+  <button class="pbtn active" onclick="sp(0)">① 初期對峙</button>
+  <button class="pbtn" onclick="sp(1)">② 白馬延津</button>
+  <button class="pbtn" onclick="sp(2)">③ 官渡相持</button>
+  <button class="pbtn" onclick="sp(3)">④ 烏巢奇襲</button>
+  <button class="pbtn" onclick="sp(4)">⑤ 袁軍潰敗</button>
+</div>
+
+<svg viewBox="0 0 760 480" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#C04828" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <linearGradient id="rv" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3B8BD4" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#3B8BD4" stop-opacity=".2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect x="40" y="120" width="680" height="320" rx="4" fill="#e8f5e0" opacity=".25"/>
+
+  <!-- 黃河 -->
+  <path d="M30 118 Q140 104 240 118 Q340 132 440 120 Q530 110 630 124 Q680 130 740 122"
+        fill="none" stroke="url(#rv)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M30 118 Q140 104 240 118 Q340 132 440 120 Q530 110 630 124 Q680 130 740 122"
+        fill="none" stroke="#3B8BD4" stroke-width="1" opacity=".5"/>
+  <text font-size="13" x="660" y="108" fill="#185FA5" opacity=".85" font-weight="500">黃　河</text>
+
+  <!-- 太行山 -->
+  <g opacity=".45">
+    <polygon points="660,165 676,132 692,165" fill="#b4b2a9"/>
+    <polygon points="678,172 696,136 714,172" fill="#b4b2a9"/>
+    <text font-size="11" x="687" y="190" text-anchor="middle" fill="#5f5e5a">太行山</text>
+  </g>
+
+  <!-- 濮水 -->
+  <path d="M160 320 Q260 306 350 320 Q410 330 470 322"
+        fill="none" stroke="#3B8BD4" stroke-width="5" opacity=".2" stroke-linecap="round"/>
+  <text font-size="11" x="325" y="348" text-anchor="middle" fill="#185FA5" opacity=".6">濮　水</text>
+
+  <!-- 城池標記 -->
+  <!-- 鄴城 -->
+  <rect x="600" y="158" width="76" height="28" rx="5" fill="#FAECE7" stroke="#D85A30" stroke-width="1"/>
+  <text font-size="12" x="638" y="176" text-anchor="middle" fill="#993C1D" font-weight="500">鄴城（袁）</text>
+
+  <!-- 許都 -->
+  <rect x="200" y="410" width="78" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+  <text font-size="12" x="239" y="428" text-anchor="middle" fill="#085041" font-weight="500">許都（曹）</text>
+
+  <!-- 官渡 -->
+  <rect x="252" y="248" width="58" height="26" rx="4" fill="#FAEEDA" stroke="#BA7517" stroke-width="1.2"/>
+  <text font-size="12" x="281" y="265" text-anchor="middle" fill="#633806" font-weight="500">官　渡</text>
+
+  <!-- 白馬 -->
+  <rect x="400" y="140" width="54" height="24" rx="4" fill="#f1efe8" stroke="#888780" stroke-width=".8"/>
+  <text font-size="11" x="427" y="156" text-anchor="middle" fill="#2c2c2a">白　馬</text>
+
+  <!-- 延津 -->
+  <rect x="306" y="140" width="54" height="24" rx="4" fill="#f1efe8" stroke="#888780" stroke-width=".8"/>
+  <text font-size="11" x="333" y="156" text-anchor="middle" fill="#2c2c2a">延　津</text>
+
+  <!-- 烏巢 -->
+  <rect x="428" y="222" width="54" height="24" rx="4" fill="#f1efe8" stroke="#888780" stroke-width=".8"/>
+  <text font-size="11" x="455" y="238" text-anchor="middle" fill="#2c2c2a">烏　巢</text>
+
+  <!-- 動態圖層 -->
+  <g id="dl"></g>
+
+  <!-- 圖例 -->
+  <rect x="30" y="390" width="156" height="72" rx="6" fill="white" stroke="#d3d1c7" stroke-width=".8" opacity=".95"/>
+  <line x1="44" y1="410" x2="72" y2="410" stroke="#C04828" stroke-width="2.5" marker-end="url(#arR)"/>
+  <text font-size="12" x="80" y="414" fill="#2c2c2a">袁軍動向</text>
+  <line x1="44" y1="432" x2="72" y2="432" stroke="#185FA5" stroke-width="2.5" marker-end="url(#arB)"/>
+  <text font-size="12" x="80" y="436" fill="#2c2c2a">曹軍動向</text>
+  <circle cx="54" cy="452" r="5" fill="#E24B4A" opacity=".85"/>
+  <text font-size="12" x="68" y="456" fill="#2c2c2a">決戰地點</text>
+</svg>
+
+<div id="desc-box"></div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+
+const phases=[
+{desc:"【初期對峙】袁紹擁兵十萬，自鄴城南下；曹操以許都為根基，兵力不及袁紹三分之一。雙方在黃河沿線對峙，袁紹佔有壓倒性兵力優勢，形勢對曹操極為不利。",
+draw:g=>{
+  army(g,625,205,"袁軍主力（10萬）","red");
+  army(g,275,305,"曹軍（約2萬）","blue");
+  dashLine(g,390,130,390,440,"#888780");
+  lbl(g,398,290,"← 對峙線","#5f5e5a");
+}},
+{desc:"【白馬延津之戰】袁紹派顏良圍攻白馬，曹操採荀攸聲東擊西之計：先佯攻延津牽制袁軍，再回師白馬，關羽陣斬顏良；隨後誘袁軍追至延津，再斬文醜。",
+draw:g=>{
+  army(g,625,205,"袁軍","red");
+  army(g,275,305,"曹軍","blue");
+  mline(g,596,192,454,152,"red","袁·顏良圍白馬");
+  mline(g,285,292,333,164,"blue","佯攻延津");
+  setTimeout(()=>mline(g,346,152,420,148,"blue","回師斬顏良"),1000);
+  battle(g,427,152,"斬顏良");
+  battle(g,333,152,"斬文醜");
+}},
+{desc:"【官渡相持】袁紹主力全面南渡，在官渡附近築起高壘，居高臨下以箭矢壓制曹軍。曹操深溝堅守，雙方相持數月，曹軍糧草日漸匱乏，形勢極為嚴峻。",
+draw:g=>{
+  mline(g,610,200,460,248,"red","袁軍主力渡河");
+  army(g,468,265,"袁軍大營","red");
+  army(g,275,280,"曹軍堅守","blue");
+  lbl(g,478,235,"高壘俯射 ↓","#993C1D");
+  battle(g,280,272,"相持");
+}},
+{desc:"【烏巢奇襲】謀士許攸叛袁投曹，告知袁軍糧草囤於烏巢且守備薄弱。曹操親率精兵五千輕裝急進，夜奔烏巢，一舉火燒糧倉。此役是整場戰爭最關鍵的轉折點。",
+draw:g=>{
+  army(g,468,265,"袁軍大營","red");
+  army(g,275,280,"曹軍","blue");
+  const p=document.createElementNS(NS,"path");
+  p.setAttribute("d","M285,276 Q320,265 370,258 Q415,253 440,242");
+  p.setAttribute("fill","none");p.setAttribute("stroke","#185FA5");
+  p.setAttribute("stroke-width","2.5");p.setAttribute("marker-end","url(#arB)");
+  p.classList.add("ml");g.appendChild(p);
+  lbl(g,330,252,"曹操奇襲","#185FA5");
+  fire(g,455,238);
+  battle(g,455,238,"火燒烏巢");
+}},
+{desc:"【袁軍潰敗】烏巢糧草被焚後袁軍軍心大潰，張郃、高覽率眾投降。袁紹僅帶八百騎倉皇北渡黃河，十萬大軍幾近覆沒。曹操以少勝多，奠定統一北方的基礎。",
+draw:g=>{
+  mline(g,455,252,605,195,"red","袁紹北逃");
+  mline(g,435,262,530,228,"red","");
+  mline(g,285,280,440,258,"blue","曹軍追擊");
+  mline(g,285,280,480,245,"blue","");
+  const r=document.createElementNS(NS,"rect");
+  r.setAttribute("x","320");r.setAttribute("y","340");
+  r.setAttribute("width","140");r.setAttribute("height","38");
+  r.setAttribute("rx","8");r.setAttribute("fill","#E1F5EE");
+  r.setAttribute("stroke","#0F6E56");r.setAttribute("stroke-width","1.5");
+  r.classList.add("fi");g.appendChild(r);
+  const t=document.createElementNS(NS,"text");
+  t.setAttribute("x","390");t.setAttribute("y","364");
+  t.setAttribute("text-anchor","middle");t.setAttribute("font-size","15");
+  t.setAttribute("font-weight","600");t.setAttribute("fill","#085041");
+  t.classList.add("fi");t.textContent="曹操大勝";g.appendChild(t);
+}}
+];
+
+function mkEl(tag){return document.createElementNS(NS,tag);}
+
+function army(g,x,y,label,col){
+  const c=col==="red"?"#C04828":"#185FA5";
+  const cf=col==="red"?"#FAECE7":"#E6F1FB";
+  const lines=label.split("（");
+  const el=mkEl("g");el.classList.add("fi");
+  const w=label.length*8+24;
+  const h=44;
+  const r=mkEl("rect");
+  r.setAttribute("x",x-w/2);r.setAttribute("y",y-h/2);
+  r.setAttribute("width",w);r.setAttribute("height",h);
+  r.setAttribute("rx","6");r.setAttribute("fill",cf);
+  r.setAttribute("stroke",c);r.setAttribute("stroke-width","1.2");
+  el.appendChild(r);
+  if(lines.length>1){
+    const t1=mkEl("text");
+    t1.setAttribute("x",x);t1.setAttribute("y",y-8);
+    t1.setAttribute("text-anchor","middle");t1.setAttribute("dominant-baseline","central");
+    t1.setAttribute("font-size","12");t1.setAttribute("fill",c);t1.setAttribute("font-weight","500");
+    t1.textContent=lines[0];el.appendChild(t1);
+    const t2=mkEl("text");
+    t2.setAttribute("x",x);t2.setAttribute("y",y+10);
+    t2.setAttribute("text-anchor","middle");t2.setAttribute("dominant-baseline","central");
+    t2.setAttribute("font-size","11");t2.setAttribute("fill",c);
+    t2.textContent="（"+lines[1];el.appendChild(t2);
+  } else {
+    const t=mkEl("text");
+    t.setAttribute("x",x);t.setAttribute("y",y);
+    t.setAttribute("text-anchor","middle");t.setAttribute("dominant-baseline","central");
+    t.setAttribute("font-size","12");t.setAttribute("fill",c);t.setAttribute("font-weight","500");
+    t.textContent=label;el.appendChild(t);
+  }
+  g.appendChild(el);
+}
+
+function mline(g,x1,y1,x2,y2,col,label){
+  const c=col==="red"?"#C04828":"#185FA5";
+  const ma=col==="red"?"url(#arR)":"url(#arB)";
+  const el=mkEl("line");
+  el.setAttribute("x1",x1);el.setAttribute("y1",y1);
+  el.setAttribute("x2",x2);el.setAttribute("y2",y2);
+  el.setAttribute("stroke",c);el.setAttribute("stroke-width","2.5");
+  el.setAttribute("marker-end",ma);el.setAttribute("fill","none");
+  el.classList.add("ml");g.appendChild(el);
+  if(label){
+    const mx=(+x1+ +x2)/2,my=(+y1+ +y2)/2;
+    const t=mkEl("text");
+    t.setAttribute("x",mx+4);t.setAttribute("y",my-7);
+    t.setAttribute("font-size","11");t.setAttribute("fill",c);
+    t.classList.add("fi");t.textContent=label;g.appendChild(t);
+  }
+}
+
+function battle(g,x,y,label){
+  const c=mkEl("circle");
+  c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r","7");
+  c.setAttribute("fill","#E24B4A");c.setAttribute("opacity",".85");
+  c.classList.add("bp","fi");g.appendChild(c);
+  if(label){
+    const t=mkEl("text");
+    t.setAttribute("x",x+12);t.setAttribute("y",y+4);
+    t.setAttribute("font-size","11");t.setAttribute("fill","#A32D2D");t.setAttribute("font-weight","500");
+    t.classList.add("fi");t.textContent=label;g.appendChild(t);
+  }
+}
+
+function fire(g,x,y){
+  ["#EF9F27","#E24B4A","#BA7517"].forEach((c,i)=>{
+    const p=mkEl("path");
+    const ox=x+(i-1)*8;
+    p.setAttribute("d",`M${ox},${y} Q${ox+5},${y-14} ${ox},${y-24} Q${ox-5},${y-14} ${ox},${y}`);
+    p.setAttribute("fill",c);p.setAttribute("opacity",".9");
+    p.classList.add("fi");g.appendChild(p);
+  });
+}
+
+function dashLine(g,x1,y1,x2,y2,col){
+  const el=mkEl("line");
+  el.setAttribute("x1",x1);el.setAttribute("y1",y1);
+  el.setAttribute("x2",x2);el.setAttribute("y2",y2);
+  el.setAttribute("stroke",col);el.setAttribute("stroke-width","1");
+  el.setAttribute("stroke-dasharray","7 4");el.setAttribute("fill","none");
+  el.classList.add("fi");g.appendChild(el);
+}
+
+function lbl(g,x,y,text,col){
+  const t=mkEl("text");
+  t.setAttribute("x",x);t.setAttribute("y",y);
+  t.setAttribute("font-size","11");t.setAttribute("fill",col);
+  t.classList.add("fi");t.textContent=text;g.appendChild(t);
+}
+
+function sp(idx){
+  document.querySelectorAll(".pbtn").forEach((b,i)=>b.classList.toggle("active",i===idx));
+  document.getElementById("dl").innerHTML="";
+  phases[idx].draw(document.getElementById("dl"));
+  document.getElementById("desc-box").textContent=phases[idx].desc;
+}
+sp(0);
+</script>
+</body>
+</html>
