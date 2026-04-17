@@ -14,3 +14,4 @@ __pycache__/
 Thumbs.db
 .ipynb_checkpoints/
 *.log
+test/nba_daily_report/report/
