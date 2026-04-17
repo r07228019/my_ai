@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.anthropic.com)"
+    ]
+  }
+}

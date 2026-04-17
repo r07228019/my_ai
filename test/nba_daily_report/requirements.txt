@@ -1,0 +1,3 @@
+anthropic[bedrock]>=0.40.0
+nba_api>=1.4.0
+boto3>=1.28.59
