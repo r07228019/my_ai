@@ -22,25 +22,25 @@
 
 ```mermaid
 flowchart TD
-    A[開始] --> B[載入 config.yaml\n& system_prompt.md]
-    B --> C{有指定\n--profile?}
+    A[開始] --> B[載入 config.yaml<br>& system_prompt.md]
+    B --> C{有指定<br>--profile?}
     C -->|Yes| D[讀取 AWS profile 設定]
     C -->|No| D
-    D --> E{profile 或環境變數\n有 mfa_serial?}
+    D --> E{profile 或環境變數<br>有 mfa_serial?}
     E -->|Yes| F[輸入 MFA 驗證碼]
-    F --> G[STS GetSessionToken\n取得臨時憑證]
+    F --> G[STS GetSessionToken<br>取得臨時憑證]
     G --> H
     E -->|No| H[取得美東時間當日日期]
-    H --> I[NBA API: Scoreboard\n取得當日比賽列表]
+    H --> I[NBA API: Scoreboard<br>取得當日比賽列表]
     I --> J{有比賽?}
     J -->|No| K[產生「本日無賽事」報告]
     J -->|Yes| L[遍歷每場比賽]
     L --> M{已完賽?}
-    M -->|Yes| N[NBA API: BoxScore\n取得球員數據]
+    M -->|Yes| N[NBA API: BoxScore<br>取得球員數據]
     N --> O[組裝 JSON payload]
     M -->|No| O
-    O --> P[Claude Opus via Bedrock\n彙整繁體中文戰報]
-    P --> Q[寫入 report/ 目錄\nnba_daily_report_日期.md]
+    O --> P[Claude Opus via Bedrock<br>彙整繁體中文戰報]
+    P --> Q[寫入 report/ 目錄<br>nba_daily_report_日期.md]
     K --> Q
     Q --> R[結束]
 ```
