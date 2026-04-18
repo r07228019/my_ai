@@ -58,14 +58,14 @@ def setup_aws_session(
         mfa_seed = os.getenv("AWS_MFA_SEED")
         if not mfa_seed:
             raise ValueError("環境變數缺少 AWS_MFA_SEED，請確認")
-        print("[0/3] 自動產生 MFA code 並取得臨時憑證 ...")
+        print("[0/4] 自動產生 MFA code 並取得臨時憑證 ...")
         token_code = generate_mfa_code(mfa_seed)
     elif profile_serial := profile_cfg.get("mfa_serial"):
         mfa_serial = profile_serial
         token_code = input("請輸入 MFA 驗證碼 (6 碼): ").strip()
         if not token_code:
             raise ValueError("MFA 驗證碼不可為空")
-        print("[0/3] 手動輸入 MFA，取得臨時憑證 ...")
+        print("[0/4] 手動輸入 MFA，取得臨時憑證 ...")
     else:
         return aws_region
 

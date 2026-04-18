@@ -22,6 +22,7 @@ from nba_api.live.nba.endpoints import boxscore, scoreboard
 from utils.aws_auth import setup_aws_session
 
 PROJECT_DIR = Path(__file__).parent
+REPO_ROOT = PROJECT_DIR.parent.parent
 TIMEOUT_SECONDS = 600
 
 
@@ -139,6 +140,129 @@ def summarize_with_claude(
     return "".join(b.text for b in final.content if b.type == "text")
 
 
+def _render_page(
+    title: str,
+    body_html: str,
+    reports: list[dict],
+    active_date: str,
+    base_path: str,
+) -> str:
+    """Render a full HTML page with Pico.css sidebar layout."""
+    sidebar_items = []
+    for r in reports:
+        href = (
+            f"{base_path}index.html"
+            if r["date"] == reports[0]["date"]
+            else f"{base_path}reports/{r['filename']}"
+        )
+        active = ' aria-current="page"' if r["date"] == active_date else ""
+        sidebar_items.append(f'        <li><a href="{href}"{active}>{r["date"]}</a></li>')
+    sidebar = "\n".join(sidebar_items)
+    return f"""<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    .layout {{
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      min-height: calc(100vh - 5rem);
+    }}
+    .sidebar {{
+      padding: 1.5rem 1rem;
+      border-right: 1px solid var(--pico-muted-border-color);
+    }}
+    .sidebar h2 {{
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--pico-muted-color);
+      margin-bottom: 0.75rem;
+    }}
+    .sidebar ul {{
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }}
+    .sidebar li {{ margin: 0.3rem 0; }}
+    .sidebar a {{
+      font-size: 0.9rem;
+      text-decoration: none;
+    }}
+    .sidebar a[aria-current] {{ font-weight: 700; }}
+    .content {{
+      padding: 2rem 2.5rem;
+      max-width: 820px;
+    }}
+  </style>
+</head>
+<body>
+  <header class="container-fluid">
+    <nav>
+      <ul><li><strong>🏀 NBA Daily Report</strong></li></ul>
+    </nav>
+  </header>
+  <div class="layout container-fluid">
+    <aside class="sidebar">
+      <h2>歷史報告</h2>
+      <ul>
+{sidebar}
+      </ul>
+    </aside>
+    <article class="content">
+      {body_html}
+    </article>
+  </div>
+</body>
+</html>"""
+
+
+def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
+    """Generate static HTML site from the last keep_n markdown reports.
+
+    Returns the number of reports rendered.
+    """
+    import markdown as md_lib
+
+    md_files = sorted(report_dir.glob("nba_daily_report_*.md"), reverse=True)[:keep_n]
+    if not md_files:
+        return 0
+
+    docs_reports_dir = docs_dir / "reports"
+    docs_reports_dir.mkdir(parents=True, exist_ok=True)
+
+    reports = [
+        {
+            "date": p.stem.replace("nba_daily_report_", ""),
+            "body": md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"]),
+            "filename": f"{p.stem}.html",
+        }
+        for p in md_files
+    ]
+
+    # index.html = latest report
+    (docs_dir / "index.html").write_text(
+        _render_page(f"NBA Daily Report — {reports[0]['date']}", reports[0]["body"], reports, reports[0]["date"], base_path=""),
+        encoding="utf-8",
+    )
+
+    # individual pages
+    for report in reports:
+        (docs_reports_dir / report["filename"]).write_text(
+            _render_page(f"NBA Daily Report — {report['date']}", report["body"], reports, report["date"], base_path="../"),
+            encoding="utf-8",
+        )
+
+    # remove html files beyond keep_n
+    for old in sorted(docs_reports_dir.glob("nba_daily_report_*.html"), reverse=True)[keep_n:]:
+        old.unlink()
+
+    return len(reports)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="NBA 每日戰報產生器 (Bedrock)")
     parser.add_argument(
@@ -167,6 +291,7 @@ def main() -> int:
         default_region = config["aws"]["default_region"]
         bedrock_model = config["aws"]["bedrock_model"]
         output_dir = PROJECT_DIR / config["output"]["dir"]
+        docs_dir = REPO_ROOT / config["output"]["docs_dir"]
 
         profile = args.profile or config["aws"].get("default_profile")
         if profile:
@@ -177,13 +302,13 @@ def main() -> int:
         et_now = datetime.now(ZoneInfo("US/Eastern"))
         report_date = et_now.strftime("%Y-%m-%d")
 
-        print(f"[1/3] 擷取 {report_date} (ET) 的 NBA 比賽資料 ...")
+        print(f"[1/4] 擷取 {report_date} (ET) 的 NBA 比賽資料 ...")
         games = fetch_todays_games()
         print(f"      找到 {len(games)} 場比賽")
 
         payload = build_games_payload(games)
 
-        print(f"[2/3] 呼叫 Claude ({bedrock_model}) 彙整報告 ...")
+        print(f"[2/4] 呼叫 Claude ({bedrock_model}) 彙整報告 ...")
         if not payload:
             report = f"# 🏀 NBA 每日戰報 — {report_date}\n\n本日美東時間暫無 NBA 賽事。\n"
         else:
@@ -193,7 +318,11 @@ def main() -> int:
         output_dir.mkdir(exist_ok=True)
         out_path = output_dir / f"nba_daily_report_{report_date}.md"
         out_path.write_text(report, encoding="utf-8")
-        print(f"[3/3] 已寫入：{out_path}")
+        print(f"[3/4] 已寫入：{out_path}")
+
+        print(f"[4/4] 更新靜態網頁 ...")
+        n = generate_website(output_dir, docs_dir)
+        print(f"      已產生 {n} 份報告至 {docs_dir}")
         return 0
     except (ValueError, TimeoutError) as e:
         logger.error("%s", e)

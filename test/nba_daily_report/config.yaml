@@ -11,4 +11,5 @@ claude:
 
 # 輸出設定
 output:
-  dir: report  # 相對於專案根目錄
+  dir: report     # 相對於本檔案所在目錄（test/nba_daily_report/）
+  docs_dir: docs  # 相對於 repo 根目錄（my_ai/）
