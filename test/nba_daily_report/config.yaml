@@ -1,5 +1,6 @@
 # AWS Bedrock 設定
 aws:
+  default_profile: cathay-dt-lab
   default_region: us-east-1
   bedrock_model: us.anthropic.claude-opus-4-7
 

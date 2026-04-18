@@ -154,11 +154,12 @@ def main() -> int:
     bedrock_model = config["aws"]["bedrock_model"]
     output_dir = PROJECT_DIR / config["output"]["dir"]
 
-    if args.profile:
-        print(f"[*] 使用 AWS profile: {args.profile}")
+    profile = args.profile or config["aws"].get("default_profile")
+    if profile:
+        print(f"[*] 使用 AWS profile: {profile}")
 
     try:
-        aws_region = setup_aws_session(args.profile, args.region, default_region)
+        aws_region = setup_aws_session(profile, args.region, default_region)
     except ValueError as e:
         logger.error("%s", e)
         return 1
