@@ -4,7 +4,9 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import signal
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -20,6 +22,11 @@ from nba_api.live.nba.endpoints import boxscore, scoreboard
 from utils.aws_auth import setup_aws_session
 
 PROJECT_DIR = Path(__file__).parent
+TIMEOUT_SECONDS = 600
+
+
+def _timeout_handler(_signum, _frame):
+    raise TimeoutError(f"整支程式執行超過 {TIMEOUT_SECONDS // 60} 分鐘，已中止")
 
 
 def load_config() -> dict:
@@ -148,45 +155,53 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    args = parse_args()
-    config = load_config()
-    system_prompt = load_system_prompt(config)
-
-    default_region = config["aws"]["default_region"]
-    bedrock_model = config["aws"]["bedrock_model"]
-    output_dir = PROJECT_DIR / config["output"]["dir"]
-
-    profile = args.profile or config["aws"].get("default_profile")
-    if profile:
-        print(f"[*] 使用 AWS profile: {profile}")
+    start = time.perf_counter()
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(TIMEOUT_SECONDS)
 
     try:
+        args = parse_args()
+        config = load_config()
+        system_prompt = load_system_prompt(config)
+
+        default_region = config["aws"]["default_region"]
+        bedrock_model = config["aws"]["bedrock_model"]
+        output_dir = PROJECT_DIR / config["output"]["dir"]
+
+        profile = args.profile or config["aws"].get("default_profile")
+        if profile:
+            print(f"[*] 使用 AWS profile: {profile}")
+
         aws_region = setup_aws_session(profile, args.region, default_region)
-    except ValueError as e:
+
+        et_now = datetime.now(ZoneInfo("US/Eastern"))
+        report_date = et_now.strftime("%Y-%m-%d")
+
+        print(f"[1/3] 擷取 {report_date} (ET) 的 NBA 比賽資料 ...")
+        games = fetch_todays_games()
+        print(f"      找到 {len(games)} 場比賽")
+
+        payload = build_games_payload(games)
+
+        print(f"[2/3] 呼叫 Claude ({bedrock_model}) 彙整報告 ...")
+        if not payload:
+            report = f"# 🏀 NBA 每日戰報 — {report_date}\n\n本日美東時間暫無 NBA 賽事。\n"
+        else:
+            summary = summarize_with_claude(payload, report_date, aws_region, config, system_prompt)
+            report = f"{summary}\n"
+
+        output_dir.mkdir(exist_ok=True)
+        out_path = output_dir / f"nba_daily_report_{report_date}.md"
+        out_path.write_text(report, encoding="utf-8")
+        print(f"[3/3] 已寫入：{out_path}")
+        return 0
+    except (ValueError, TimeoutError) as e:
         logger.error("%s", e)
         return 1
-
-    et_now = datetime.now(ZoneInfo("US/Eastern"))
-    report_date = et_now.strftime("%Y-%m-%d")
-
-    print(f"[1/3] 擷取 {report_date} (ET) 的 NBA 比賽資料 ...")
-    games = fetch_todays_games()
-    print(f"      找到 {len(games)} 場比賽")
-
-    payload = build_games_payload(games)
-
-    print(f"[2/3] 呼叫 Claude ({bedrock_model}) 彙整報告 ...")
-    if not payload:
-        report = f"# 🏀 NBA 每日戰報 — {report_date}\n\n本日美東時間暫無 NBA 賽事。\n"
-    else:
-        summary = summarize_with_claude(payload, report_date, aws_region, config, system_prompt)
-        report = f"{summary}\n"
-
-    output_dir.mkdir(exist_ok=True)
-    out_path = output_dir / f"nba_daily_report_{report_date}.md"
-    out_path.write_text(report, encoding="utf-8")
-    print(f"[3/3] 已寫入：{out_path}")
-    return 0
+    finally:
+        signal.alarm(0)
+        elapsed = time.perf_counter() - start
+        print(f"[*] 總執行時間：{elapsed:.2f} 秒")
 
 
 if __name__ == "__main__":
