@@ -1,0 +1,17 @@
+repos/
+.venv/
+venv/
+env/
+my_ai_venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/
+*.log
+test/nba_daily_report/report/

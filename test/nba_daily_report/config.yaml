@@ -1,0 +1,14 @@
+# AWS Bedrock 設定
+aws:
+  default_profile: cathay-dt-lab
+  default_region: us-east-1
+  bedrock_model: us.anthropic.claude-opus-4-7
+
+# Claude API 參數
+claude:
+  max_tokens: 8000
+  system_prompt_file: system_prompt.md  # 相對於本檔案的路徑
+
+# 輸出設定
+output:
+  dir: report  # 相對於專案根目錄
