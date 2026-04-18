@@ -1,13 +1,13 @@
 # NBA 每日戰報產生器
 
-一支命令列 Python 程式，用來自動擷取當日 NBA 比賽結果與球員數據，並透過 **Claude Sonnet 4.6** 彙整成一份繁體中文的 Markdown 戰報。
+一支命令列 Python 程式，用來自動擷取當日 NBA 比賽結果與球員數據，並透過 **Claude Opus 4.7** 彙整成一份繁體中文的 Markdown 戰報。
 
 ## 功能說明
 
 執行後會依序完成：
 
 1. **抓資料**：呼叫 [`nba_api`](https://github.com/swar/nba_api) 的 Live Scoreboard 取得「美東時間當日」的所有比賽；對已完賽的場次再呼叫 Boxscore 取得球員個人數據（得分、籃板、助攻、抄截、阻攻、失誤、投籃命中率、正負值等）。
-2. **彙整報告**：把結構化資料丟給 Claude Sonnet 4.6，由模型依照固定格式撰寫戰報。
+2. **彙整報告**：把結構化資料丟給 Claude Opus 4.7，由模型依照固定格式撰寫戰報。
 3. **寫檔**：輸出到 `report/nba_daily_report_YYYY-MM-DD.md`（檔名中的日期為美東時間），`report/` 目錄會自動建立。
 
 報告固定包含五個段落：
@@ -39,7 +39,7 @@ flowchart TD
     M -->|Yes| N[NBA API: BoxScore\n取得球員數據]
     N --> O[組裝 JSON payload]
     M -->|No| O
-    O --> P[Claude Sonnet via Bedrock\n彙整繁體中文戰報]
+    O --> P[Claude Opus via Bedrock\n彙整繁體中文戰報]
     P --> Q[寫入 report/ 目錄\nnba_daily_report_日期.md]
     K --> Q
     Q --> R[結束]
@@ -130,7 +130,7 @@ python -m test.nba_daily_report.main --profile cathay-dt-lab --region us-east-1
       MFA 臨時憑證取得成功，有效至 2026-04-18 12:00:00+00:00
 [1/3] 擷取 2026-04-18 (ET) 的 NBA 比賽資料 ...
       找到 8 場比賽
-[2/3] 呼叫 Claude (us.anthropic.claude-sonnet-4-6) 彙整報告 ...
+[2/3] 呼叫 Claude (us.anthropic.claude-opus-4-7) 彙整報告 ...
 [3/3] 已寫入：.../nba_daily_report_2026-04-18.md
 ```
 
@@ -140,7 +140,7 @@ python -m test.nba_daily_report.main --profile cathay-dt-lab --region us-east-1
 
 - **時區**：NBA 賽程以美東時間 (US/Eastern) 為基準，因此「當日」以 ET 為準，而非台灣時區。
 - **資料來源**：只使用官方 Live 端點；進行中或未開賽的比賽僅帶出比分與隊伍資訊，不拉 box score。
-- **模型選擇**：透過 AWS Bedrock 使用 `us.anthropic.claude-sonnet-4-6`，呼叫時採用 streaming 以避免長輸出 timeout。
+- **模型選擇**：透過 AWS Bedrock 使用 `us.anthropic.claude-opus-4-7`，呼叫時採用 streaming 以避免長輸出 timeout。
 - **MFA 支援**：透過 `utils/aws_auth.setup_aws_session()` 共用模組處理，自動偵測 profile config 的 `mfa_serial` 或環境變數 `AWS_MFA_SERIAL`，互動式詢問驗證碼後透過 STS 取得臨時憑證。
 - **人事異動資料**：NBA API 並不提供交易、簽約、教練異動等資訊，因此系統提示要求模型在資料缺乏時明確註明，不可虛構。
 - **無賽事處理**：若當日沒有任何比賽，跳過 API 呼叫，直接輸出簡短說明。

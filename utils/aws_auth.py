@@ -34,7 +34,7 @@ def setup_aws_session(
     """Read AWS profile config, handle MFA if needed, return resolved region."""
     session = botocore.session.Session(profile=profile)
     profile_cfg = session.get_scoped_config()
-    aws_region = region_override or profile_cfg.get("region", default_region)
+    aws_region = region_override or default_region or profile_cfg.get("region")
     mfa_serial = profile_cfg.get("mfa_serial") or os.getenv("AWS_MFA_SERIAL")
 
     if mfa_serial:

@@ -1,4 +1,4 @@
-"""Fetch today's NBA games, summarize with Claude Sonnet via AWS Bedrock, save as Markdown."""
+"""Fetch today's NBA games, summarize with Claude via AWS Bedrock, save as Markdown."""
 from __future__ import annotations
 
 import argparse

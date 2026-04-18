@@ -1,7 +1,7 @@
 # AWS Bedrock 設定
 aws:
   default_region: us-east-1
-  bedrock_model: us.anthropic.claude-opus-4-6-v1
+  bedrock_model: us.anthropic.claude-opus-4-7
 
 # Claude API 參數
 claude:
