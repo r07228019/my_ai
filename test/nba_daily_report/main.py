@@ -177,10 +177,10 @@ def main() -> int:
 
     print(f"[2/3] 呼叫 Claude ({bedrock_model}) 彙整報告 ...")
     if not payload:
-        report = f"# NBA 每日戰報 — {report_date}\n\n本日美東時間暫無 NBA 賽事。\n"
+        report = f"# 🏀 NBA 每日戰報 — {report_date}\n\n本日美東時間暫無 NBA 賽事。\n"
     else:
         summary = summarize_with_claude(payload, report_date, aws_region, config, system_prompt)
-        report = f"# NBA 每日戰報 — {report_date}\n\n{summary}\n"
+        report = f"{summary}\n"
 
     output_dir.mkdir(exist_ok=True)
     out_path = output_dir / f"nba_daily_report_{report_date}.md"
