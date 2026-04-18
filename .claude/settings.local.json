@@ -9,7 +9,10 @@
       "Bash(hermes config *)",
       "Bash(hermes model *)",
       "Bash(python3 -m json.tool)",
-      "Bash(hermes auth *)"
+      "Bash(hermes auth *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
