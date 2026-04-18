@@ -127,6 +127,8 @@ def summarize_with_claude(
         messages=[{"role": "user", "content": user_prompt}],
     ) as stream:
         final = stream.get_final_message()
+    usage = final.usage
+    print(f"      Token 用量：input={usage.input_tokens}, output={usage.output_tokens}, total={usage.input_tokens + usage.output_tokens}")
     return "".join(b.text for b in final.content if b.type == "text")
 
 

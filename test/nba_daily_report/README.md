@@ -119,19 +119,25 @@ export AWS_MFA_SERIAL=arn:aws:iam::393326654921:mfa/YOUR_IAM_USER
 確認已啟用虛擬環境（提示符前方應顯示 `(my_ai_venv)`），從專案根目錄 `my_ai/` 執行：
 
 ```bash
-python -m test.nba_daily_report.main --profile cathay-dt-lab --region us-east-1
+# 使用 config.yaml 中的 default_profile 和 default_region（最簡用法）
+python -m test.nba_daily_report.main
+
+# 覆蓋 profile 或 region
+python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 ```
 
 執行範例輸出（有 MFA）：
 
 ```
+[*] 使用 AWS profile: cathay-dt-lab
 請輸入 MFA 驗證碼 (6 碼): 123456
 [0/3] 取得 MFA 臨時憑證 ...
       MFA 臨時憑證取得成功，有效至 2026-04-18 12:00:00+00:00
 [1/3] 擷取 2026-04-18 (ET) 的 NBA 比賽資料 ...
       找到 8 場比賽
 [2/3] 呼叫 Claude (us.anthropic.claude-opus-4-7) 彙整報告 ...
-[3/3] 已寫入：.../nba_daily_report_2026-04-18.md
+      Token 用量：input=12345, output=2048, total=14393
+[3/3] 已寫入：.../report/nba_daily_report_2026-04-18.md
 ```
 
 完成後打開 `report/nba_daily_report_2026-04-18.md` 即可閱讀戰報。
@@ -140,7 +146,8 @@ python -m test.nba_daily_report.main --profile cathay-dt-lab --region us-east-1
 
 - **時區**：NBA 賽程以美東時間 (US/Eastern) 為基準，因此「當日」以 ET 為準，而非台灣時區。
 - **資料來源**：只使用官方 Live 端點；進行中或未開賽的比賽僅帶出比分與隊伍資訊，不拉 box score。
-- **模型選擇**：透過 AWS Bedrock 使用 `us.anthropic.claude-opus-4-7`，呼叫時採用 streaming 以避免長輸出 timeout。
+- **模型選擇**：透過 AWS Bedrock 使用 `us.anthropic.claude-opus-4-7`，呼叫時採用 streaming 以避免長輸出 timeout。執行結束時會顯示 input/output token 用量，方便追蹤費用。
+- **預設 profile**：`config.yaml` 的 `default_profile` 讓使用者不需每次帶 `--profile` 參數，`--profile` 仍可覆蓋。
 - **MFA 支援**：透過 `utils/aws_auth.setup_aws_session()` 共用模組處理，自動偵測 profile config 的 `mfa_serial` 或環境變數 `AWS_MFA_SERIAL`，互動式詢問驗證碼後透過 STS 取得臨時憑證。
 - **人事異動資料**：NBA API 並不提供交易、簽約、教練異動等資訊，因此系統提示要求模型在資料缺乏時明確註明，不可虛構。
 - **無賽事處理**：若當日沒有任何比賽，跳過 API 呼叫，直接輸出簡短說明。
