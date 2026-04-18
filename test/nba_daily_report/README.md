@@ -9,6 +9,7 @@
 1. **抓資料**：呼叫 [`nba_api`](https://github.com/swar/nba_api) 的 Live Scoreboard 取得「美東時間當日」的所有比賽；對已完賽的場次再呼叫 Boxscore 取得球員個人數據（得分、籃板、助攻、抄截、阻攻、失誤、投籃命中率、正負值等）。
 2. **彙整報告**：把結構化資料丟給 Claude Opus 4.7，由模型依照固定格式撰寫戰報。
 3. **寫檔**：輸出到 `report/nba_daily_report_YYYY-MM-DD.md`（檔名中的日期為美東時間），`report/` 目錄會自動建立。
+4. **更新靜態網頁**：掃描最近 10 份報告，生成 `docs/index.html` 與 `docs/reports/*.html`，push 後由 GitHub Pages 自動部署。
 
 報告固定包含五個段落：
 
@@ -42,25 +43,29 @@ flowchart TD
     O --> P[Claude Opus via Bedrock<br>彙整繁體中文戰報]
     P --> Q[寫入 report/ 目錄<br>nba_daily_report_日期.md]
     K --> Q
-    Q --> R[結束]
+    Q --> R[生成 docs/ 靜態網頁<br>index.html + reports/*.html]
+    R --> S[結束]
 ```
 
 ## 專案結構
 
 ```
 my_ai/
+├── requirements.txt             # Python 依賴
+├── docs/                        # GitHub Pages 靜態網頁（自動生成）
+│   ├── index.html               # 首頁（最新報告）
+│   └── reports/                 # 各份獨立頁（最多保留 10 份）
 ├── utils/
 │   ├── __init__.py
-│   └── aws_auth.py              # 共用 AWS MFA 認證模組
-├── test/
-│   └── nba_daily_report/
-│       ├── main.py              # 主程式入口
-│       ├── config.yaml          # 設定檔 (模型、region、輸出路徑等)
-│       ├── system_prompt.md     # Claude 的系統提示詞
-│       ├── requirements.txt     # Python 依賴
-│       ├── README.md            # 本文件
-│       └── report/              # 產出的每日戰報 (.md) 存放處
-└── my_ai_venv/                  # 虛擬環境
+│   ├── aws_auth.py              # 共用 AWS MFA 認證模組
+│   └── README.md                # utils 模組說明
+└── test/
+    └── nba_daily_report/
+        ├── main.py              # 主程式入口
+        ├── config.yaml          # 設定檔 (模型、region、輸出路徑等)
+        ├── system_prompt.md     # Claude 的系統提示詞
+        ├── README.md            # 本文件
+        └── report/              # 產出的每日戰報 (.md，不納入版控)
 ```
 
 ## 安裝
@@ -74,7 +79,7 @@ my_ai/
 source my_ai_venv/bin/activate
 
 # 首次安裝依賴（已安裝過可跳過）
-pip install -r test/nba_daily_report/requirements.txt
+pip install -r requirements.txt
 ```
 
 ## 設定
@@ -153,7 +158,10 @@ python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 
 > 程式設有 **10 分鐘全域 timeout**，超時會自動中止並印出總執行時間。
 
-完成後打開 `report/nba_daily_report_2026-04-18.md` 即可閱讀戰報。
+完成後可透過兩種方式閱讀戰報：
+
+- **本機**：打開 `report/nba_daily_report_2026-04-18.md`
+- **網頁**：push 後約 1-2 分鐘，至 GitHub Pages 網址瀏覽（深色主題、左側歷史報告導覽）
 
 ## 設計備註
 
@@ -164,6 +172,7 @@ python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 - **MFA 支援**：透過 `utils/aws_auth.setup_aws_session()` 共用模組處理。MFA serial 來源決定取碼方式：環境變數 `AWS_MFA_SERIAL` → 以 `pyotp` 從 `AWS_MFA_SEED` 自動產生 MFA code；profile config 的 `mfa_serial` → 互動式詢問。兩者皆可，env 優先；最後透過 STS 取得臨時憑證。
 - **人事異動資料**：NBA API 並不提供交易、簽約、教練異動等資訊，因此系統提示要求模型在資料缺乏時明確註明，不可虛構。
 - **無賽事處理**：若當日沒有任何比賽，跳過 API 呼叫，直接輸出簡短說明。
+- **靜態網頁**：每次執行後自動更新 `docs/`，以 GitHub Pages 免費部署。網頁採深色主題，內含閱讀進度條、左側歷史導覽、RWD 支援，push 後約 1-2 分鐘生效。最多保留最近 10 份報告，舊檔自動刪除。
 
 ## 已知限制
 
