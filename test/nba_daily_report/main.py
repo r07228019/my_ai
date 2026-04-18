@@ -149,14 +149,15 @@ def _render_page(
 ) -> str:
     """Render a full HTML page with dark theme, glassmorphism header, animated sidebar."""
     sidebar_items = []
-    for r in reports:
+    for i, r in enumerate(reports):
         href = (
             f"{base_path}index.html"
             if r["date"] == reports[0]["date"]
             else f"{base_path}reports/{r['filename']}"
         )
         active = ' aria-current="page"' if r["date"] == active_date else ""
-        sidebar_items.append(f'        <li><a href="{href}"{active}>{r["date"]}</a></li>')
+        delay = f"{i * 0.06 + 0.05:.2f}s"
+        sidebar_items.append(f'        <li style="animation-delay:{delay}"><a href="{href}"{active}>{r["date"]}</a></li>')
     sidebar = "\n".join(sidebar_items)
     return f"""<!DOCTYPE html>
 <html lang="zh-TW">
@@ -201,7 +202,7 @@ def _render_page(
       transition: width 0.1s linear;
     }}
 
-    /* Header — glassmorphism */
+    /* Header — glassmorphism + shrink on scroll */
     header {{
       position: sticky;
       top: 0; z-index: 100;
@@ -213,14 +214,17 @@ def _render_page(
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
+      transition: height 0.3s ease;
     }}
+    header.shrunk {{ height: 2.6rem; }}
     .header-inner {{
       display: flex;
       align-items: center;
       justify-content: space-between;
       width: 100%;
     }}
-    .header-title {{ font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }}
+    .header-title {{ font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; transition: font-size 0.3s ease; }}
+    header.shrunk .header-title {{ font-size: 0.875rem; }}
     .hamburger {{
       display: none;
       background: none;
@@ -240,6 +244,16 @@ def _render_page(
       display: grid;
       grid-template-columns: var(--sidebar-width) 1fr;
       min-height: calc(100vh - var(--header-height));
+    }}
+
+    /* Sidebar stagger fade-in */
+    .sidebar li {{
+      opacity: 0;
+      animation: slideInLeft 0.3s ease forwards;
+    }}
+    @keyframes slideInLeft {{
+      from {{ opacity: 0; transform: translateX(-12px); }}
+      to   {{ opacity: 1; transform: translateX(0); }}
     }}
 
     /* Sidebar */
@@ -296,6 +310,11 @@ def _render_page(
       transform: translateY(-50%);
       font-size: 0.35rem;
       color: var(--accent-light);
+      animation: dotPulse 2s ease-in-out infinite;
+    }}
+    @keyframes dotPulse {{
+      0%, 100% {{ opacity: 1; transform: translateY(-50%) scale(1); }}
+      50%       {{ opacity: 0.3; transform: translateY(-50%) scale(2.5); }}
     }}
 
     /* Content + fade-in */
@@ -309,11 +328,36 @@ def _render_page(
       to   {{ opacity: 1; transform: translateY(0); }}
     }}
 
+    /* Scroll-triggered section fade */
+    .fade-section {{
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }}
+    .fade-section.visible {{ opacity: 1; transform: translateY(0); }}
+
+    /* Content exit transition (page navigation) */
+    .content.exiting {{
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }}
+
     /* Markdown typography */
     .content h1 {{
       font-size: 1.75rem; font-weight: 700;
       line-height: 1.2; margin-bottom: 1.25rem;
-      color: #f0f6fc; letter-spacing: -0.02em;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #f0f6fc 0%, #818cf8 45%, #c7d2fe 55%, #f0f6fc 100%);
+      background-size: 300% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 4s linear infinite;
+    }}
+    @keyframes shimmer {{
+      from {{ background-position: 300% center; }}
+      to   {{ background-position: -300% center; }}
     }}
     .content h2 {{
       font-size: 1.2rem; font-weight: 600;
@@ -360,7 +404,9 @@ def _render_page(
       border-bottom: 2px solid var(--border);
     }}
     .content td {{ padding: 0.55rem 1rem; border-bottom: 1px solid #21262d; color: #adbac7; }}
+    .content td:first-child {{ border-left: 2px solid transparent; transition: border-color 0.25s ease; }}
     .content tr:hover td {{ background: rgba(255,255,255,0.02); }}
+    .content tr:hover td:first-child {{ border-left-color: var(--accent); }}
 
     /* Back to top */
     #back-to-top {{
@@ -454,6 +500,36 @@ def _render_page(
     overlay.addEventListener('click', () => {{
       sidebar.classList.remove('open');
       overlay.classList.remove('open');
+    }});
+
+    // Header shrink on scroll
+    window.addEventListener('scroll', () => {{
+      document.querySelector('header').classList.toggle('shrunk', window.scrollY > 60);
+    }});
+
+    // Scroll-triggered section fade (IntersectionObserver)
+    const fadeEls = document.querySelectorAll('.content h2, .content h3');
+    fadeEls.forEach(el => el.classList.add('fade-section'));
+    const sectionObserver = new IntersectionObserver((entries) => {{
+      entries.forEach(e => {{
+        if (e.isIntersecting) {{
+          e.target.classList.add('visible');
+          sectionObserver.unobserve(e.target);
+        }}
+      }});
+    }}, {{ threshold: 0.1, rootMargin: '0px 0px -30px 0px' }});
+    fadeEls.forEach(el => sectionObserver.observe(el));
+
+    // Link click fade-out transition
+    document.querySelectorAll('.sidebar a').forEach(link => {{
+      link.addEventListener('click', function(e) {{
+        const href = this.getAttribute('href');
+        if (href && !href.startsWith('#') && !this.hasAttribute('aria-current')) {{
+          e.preventDefault();
+          document.querySelector('.content').classList.add('exiting');
+          setTimeout(() => {{ window.location.href = href; }}, 200);
+        }}
+      }});
     }});
   </script>
 </body>
