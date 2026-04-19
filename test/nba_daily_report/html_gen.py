@@ -1,11 +1,147 @@
 """Static website generation: HTML rendering and NBA.com link injection."""
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
 _PROJECT_DIR = Path(__file__).parent
+
+
+def _standings_html(standings: dict) -> str:
+    """Generate HTML for the standings page."""
+    if not standings or (not standings.get("East") and not standings.get("West")):
+        return '<p style="color:var(--text-muted);padding:2rem">球隊排名資料暫時無法取得。</p>'
+
+    season = standings.get("season", "")
+
+    def render_conf(teams: list, conf_name: str) -> str:
+        rows_html = ""
+        for i, t in enumerate(teams):
+            row_class = ""
+            if i == 8:
+                row_class = ' class="zone-divider playin-zone"'
+            elif i == 10:
+                row_class = ' class="zone-divider out-zone"'
+
+            clinch = t["clinch"]
+            badge = ""
+            team_class = ""
+            if clinch in ("x", "y", "z"):
+                team_class = "clinched"
+                badge = ' <span class="clinch-badge">✓</span>'
+            elif clinch == "p":
+                team_class = "playin"
+                badge = ' <span class="clinch-badge playin">PI</span>'
+            elif clinch == "e" or clinch == "o":
+                team_class = "eliminated"
+
+            streak = t["streak"] or ""
+            streak_class = "streak-win" if streak.startswith("W") else "streak-loss"
+
+            rows_html += f"""
+      <tr{row_class}>
+        <td class="seed-col">{t['seed']}</td>
+        <td class="team-col {team_class}">
+          <a href="https://www.nba.com/team/{t['team_id']}" target="_blank" rel="noopener" class="team-link">{t['city']} {t['name']}</a>{badge}
+        </td>
+        <td>{t['wins']}</td><td>{t['losses']}</td><td>{t['pct']}</td>
+        <td>{t['gb']}</td>
+        <td class="minor-col">{t['home']}</td>
+        <td class="minor-col">{t['road']}</td>
+        <td class="{streak_class}">{streak}</td>
+      </tr>"""
+
+        return f"""
+    <div class="conf-standings">
+      <h2 class="conf-title"><i class="ph ph-trophy"></i> {conf_name}</h2>
+      <table class="standings-table">
+        <thead><tr>
+          <th>#</th><th>球隊</th><th>勝</th><th>敗</th><th>勝率</th><th>差距</th>
+          <th class="minor-col">主場</th><th class="minor-col">客場</th><th>近況</th>
+        </tr></thead>
+        <tbody>{rows_html}
+        </tbody>
+      </table>
+    </div>"""
+
+    east_html = render_conf(standings["East"], "東區 Eastern Conference")
+    west_html = render_conf(standings["West"], "西區 Western Conference")
+    return f"""<div class="standings-page">
+  <p class="data-note">{season} 賽季常規賽成績　✓ 晉季後賽　PI 附加賽</p>
+  {east_html}
+  {west_html}
+</div>"""
+
+
+def _playoffs_html(playoff_data: dict) -> str:
+    """Generate HTML for the playoffs bracket page."""
+    if not playoff_data or (not playoff_data.get("East") and not playoff_data.get("West")):
+        return '<p style="color:var(--text-muted);padding:2rem">季後賽資料暫時無法取得。</p>'
+
+    season = playoff_data.get("season", "")
+    updated_at = playoff_data.get("updated_at", "")
+
+    def render_conf(teams: list, conf_name: str) -> str:
+        if not teams:
+            return ""
+        by_seed = {t["seed"]: t for t in teams}
+        matchups_html = ""
+        for top_s, bot_s in [(1, 8), (4, 5), (3, 6), (2, 7)]:
+            top = by_seed.get(top_s)
+            bot = by_seed.get(bot_s)
+            if not top or not bot:
+                continue
+            tw = top.get("series_wins") or 0
+            bw = bot.get("series_wins") or 0
+            total = tw + bw
+            if tw == 4:
+                status, top_cls, bot_cls = f"晉級 {tw}–{bw}", "winner", "loser"
+            elif bw == 4:
+                status, top_cls, bot_cls = f"淘汰 {tw}–{bw}", "loser", "winner"
+            elif total > 0:
+                status = f"系列賽 {tw}–{bw}"
+                top_cls = "leading" if tw > bw else ("trailing" if tw < bw else "")
+                bot_cls = "leading" if bw > tw else ("trailing" if bw < tw else "")
+            else:
+                status, top_cls, bot_cls = "即將開打", "", ""
+
+            matchups_html += f"""
+        <div class="matchup">
+          <div class="matchup-team {top_cls}">
+            <span class="matchup-seed">{top_s}</span>
+            <a href="https://www.nba.com/team/{top.get('team_id','')}" target="_blank" rel="noopener" class="team-link matchup-name">{top['city']} {top['name']}</a>
+            <span class="matchup-wins">{tw if total > 0 else ''}</span>
+          </div>
+          <div class="matchup-status">{status}</div>
+          <div class="matchup-team {bot_cls}">
+            <span class="matchup-seed">{bot_s}</span>
+            <a href="https://www.nba.com/team/{bot.get('team_id','')}" target="_blank" rel="noopener" class="team-link matchup-name">{bot['city']} {bot['name']}</a>
+            <span class="matchup-wins">{bw if total > 0 else ''}</span>
+          </div>
+        </div>"""
+
+        return f"""
+      <div class="bracket-conf">
+        <h3 class="bracket-conf-title">{conf_name}</h3>
+        <div class="bracket-round-label"><i class="ph ph-flag-pennant"></i> 首輪 First Round</div>
+        <div class="bracket-matchups">{matchups_html}
+        </div>
+      </div>"""
+
+    west_html = render_conf(playoff_data.get("West", []), "西區 Western Conference")
+    east_html = render_conf(playoff_data.get("East", []), "東區 Eastern Conference")
+    updated_line = f'<p class="data-note updated-at">最後更新：{updated_at}</p>' if updated_at else ""
+    return f"""<div class="playoffs-page">
+  <p class="data-note">{season} 賽季季後賽　· 資料來源：NBA API</p>
+  {updated_line}
+  <div class="bracket-grid">
+    {west_html}
+    {east_html}
+  </div>
+</div>"""
 
 
 def _render_page(
@@ -14,6 +150,8 @@ def _render_page(
     reports: list[dict],
     active_date: str,
     base_path: str,
+    hero_label: str = "NBA Daily Report",
+    hero_date_override: str | None = None,
 ) -> str:
     """Render a full HTML page by filling template.html with report data."""
     sidebar_items = []
@@ -30,17 +168,30 @@ def _render_page(
             f'<i class="ph ph-basketball"></i> {r["date"]}</a></li>'
         )
     sidebar = "\n".join(sidebar_items)
-    try:
-        _d = datetime.strptime(active_date, "%Y-%m-%d")
-        hero_date = f"{_d.year} 年 {_d.month} 月 {_d.day} 日"
-    except Exception:
-        hero_date = active_date
+
+    standings_active = ' aria-current="page"' if active_date == "standings" else ""
+    playoffs_active = ' aria-current="page"' if active_date == "playoffs" else ""
+    nav_links = (
+        f'    <li><a href="{base_path}standings.html"{standings_active}><i class="ph ph-trophy"></i> 球隊排名</a></li>\n'
+        f'    <li><a href="{base_path}playoffs.html"{playoffs_active}><i class="ph ph-brackets-curly"></i> 季後賽形勢</a></li>'
+    )
+
+    if hero_date_override:
+        hero_date = hero_date_override
+    else:
+        try:
+            _d = datetime.strptime(active_date, "%Y-%m-%d")
+            hero_date = f"{_d.year} 年 {_d.month} 月 {_d.day} 日"
+        except Exception:
+            hero_date = active_date
 
     template = (_PROJECT_DIR / "template.html").read_text(encoding="utf-8")
     return (
         template
         .replace("%%TITLE%%", title)
+        .replace("%%NAV_LINKS%%", nav_links)
         .replace("%%SIDEBAR%%", sidebar)
+        .replace("%%HERO_LABEL%%", hero_label)
         .replace("%%HERO_DATE%%", hero_date)
         .replace("%%BODY_HTML%%", body_html)
     )
@@ -147,6 +298,7 @@ def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
     Returns the number of reports rendered.
     """
     import markdown as md_lib
+    from .nba_data import fetch_standings, fetch_playoff_picture
 
     md_files = sorted(report_dir.glob("nba_daily_report_*.md"), reverse=True)[:keep_n]
     if not md_files:
@@ -189,5 +341,47 @@ def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
 
     for old in sorted(docs_reports_dir.glob("nba_daily_report_*.html"), reverse=True)[keep_n:]:
         old.unlink()
+
+    # Standings page
+    try:
+        print("      取得球隊排名資料 ...")
+        standings = fetch_standings()
+        season = standings.get("season", "")
+    except Exception as e:
+        logger.warning("無法取得球隊排名: %s", e)
+        standings, season = {}, ""
+    (docs_dir / "standings.html").write_text(
+        _render_page(
+            f"NBA 球隊排名 {season}",
+            _standings_html(standings),
+            reports,
+            active_date="standings",
+            base_path="",
+            hero_label="球隊排名 Standings",
+            hero_date_override=f"{season} 賽季" if season else "本賽季",
+        ),
+        encoding="utf-8",
+    )
+
+    # Playoffs page
+    try:
+        print("      取得季後賽形勢資料 ...")
+        playoff_data = fetch_playoff_picture()
+    except Exception as e:
+        logger.warning("無法取得季後賽資料: %s", e)
+        playoff_data = {}
+    playoff_season = playoff_data.get("season", season)
+    (docs_dir / "playoffs.html").write_text(
+        _render_page(
+            f"NBA 季後賽 {playoff_season}",
+            _playoffs_html(playoff_data),
+            reports,
+            active_date="playoffs",
+            base_path="",
+            hero_label="季後賽形勢 Playoffs",
+            hero_date_override=f"{playoff_season} 季後賽" if playoff_season else "本賽季",
+        ),
+        encoding="utf-8",
+    )
 
     return len(reports)

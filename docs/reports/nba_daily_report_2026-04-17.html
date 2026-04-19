@@ -399,6 +399,67 @@
       .content { padding: 1.5rem 1.25rem; }
       #back-to-top { bottom: 1.25rem; right: 1.25rem; }
     }
+
+    /* Sidebar nav (standings / playoffs links) */
+    .sidebar-nav { margin-bottom: 0.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+
+    /* Collapsible history */
+    .sidebar-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1.25rem 0.4rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .sidebar-section-header:hover { background: rgba(255,255,255,0.03); }
+    #history-list.collapsed { display: none; }
+    #history-caret.rotated { transform: rotate(-90deg); }
+
+    /* Standings */
+    .standings-page, .playoffs-page { }
+    .data-note { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+    .updated-at { margin-top: 0.5rem; }
+    .conf-standings { margin-bottom: 2.5rem; }
+    .conf-title { font-size: 1rem; font-weight: 600; color: #f0f6fc; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
+    .standings-table { width: 100%; border-collapse: collapse; font-size: 0.825rem; }
+    .standings-table th { background: #1c2128; padding: 0.45rem 0.6rem; text-align: left; font-weight: 600; color: #cdd9e5; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    .standings-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid #21262d; color: #adbac7; white-space: nowrap; }
+    .standings-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .standings-table tr.playin-zone td { border-top: 1px dashed rgba(251,191,36,0.4); }
+    .standings-table tr.out-zone td { border-top: 1px dashed rgba(255,255,255,0.08); }
+    .seed-col { width: 2rem; text-align: center; color: var(--text-muted); }
+    .team-col.clinched a { color: var(--accent-light); }
+    .team-col.playin a { color: #fbbf24; }
+    .team-col.eliminated { opacity: 0.45; }
+    .clinch-badge { font-size: 0.65rem; margin-left: 0.3rem; padding: 0.1em 0.35em; border-radius: 3px; background: rgba(99,102,241,0.25); color: var(--accent-light); }
+    .clinch-badge.playin { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .minor-col { color: var(--text-muted); font-size: 0.78rem; }
+    .streak-win { color: #22c55e; font-weight: 600; }
+    .streak-loss { color: #ef4444; font-weight: 600; }
+
+    /* Bracket */
+    .bracket-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .bracket-conf { }
+    .bracket-conf-title { font-size: 0.9rem; font-weight: 600; color: #f0f6fc; margin-bottom: 0.4rem; }
+    .bracket-round-label { font-size: 0.7rem; color: var(--accent-light); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.3rem; }
+    .bracket-matchups { display: flex; flex-direction: column; gap: 0.75rem; }
+    .matchup { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .matchup-team { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; transition: background 0.2s; }
+    .matchup-team.winner { background: rgba(99,102,241,0.12); }
+    .matchup-team.loser { opacity: 0.4; }
+    .matchup-team.leading { background: rgba(99,102,241,0.06); }
+    .matchup-seed { font-size: 0.7rem; color: var(--text-muted); width: 1rem; flex-shrink: 0; }
+    .matchup-name { flex: 1; font-size: 0.8rem; font-weight: 500; color: #cdd9e5 !important; border-bottom: none !important; }
+    .matchup-name:hover { color: var(--accent-light) !important; }
+    .matchup-wins { font-size: 0.875rem; font-weight: 700; color: var(--accent-light); min-width: 1rem; text-align: right; }
+    .matchup-team.winner .matchup-wins { color: #22c55e; }
+    .matchup-status { text-align: center; font-size: 0.7rem; color: var(--text-muted); padding: 0.2rem 0.5rem; background: rgba(0,0,0,0.25); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+    @media (max-width: 640px) {
+      .bracket-grid { grid-template-columns: 1fr; }
+      .minor-col { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -415,8 +476,16 @@
 
   <div class="layout">
     <aside class="sidebar" id="sidebar">
-      <p class="sidebar-label">歷史報告</p>
-      <ul>
+      <p class="sidebar-label">快速導覽</p>
+      <ul class="sidebar-nav">
+    <li><a href="../standings.html"><i class="ph ph-trophy"></i> 球隊排名</a></li>
+    <li><a href="../playoffs.html"><i class="ph ph-brackets-curly"></i> 季後賽形勢</a></li>
+      </ul>
+      <div class="sidebar-section-header" id="history-toggle" role="button" tabindex="0" aria-expanded="true">
+        <p class="sidebar-label" style="margin-bottom:0">歷史報告</p>
+        <i class="ph ph-caret-down" id="history-caret" style="color:var(--text-muted);font-size:0.75rem;transition:transform 0.2s"></i>
+      </div>
+      <ul id="history-list">
         <li style="animation-delay:0.05s"><a href="../index.html"><i class="ph ph-basketball"></i> 2026-04-19</a></li>
         <li style="animation-delay:0.11s"><a href="../reports/nba_daily_report_2026-04-18.html"><i class="ph ph-basketball"></i> 2026-04-18</a></li>
         <li style="animation-delay:0.17s"><a href="../reports/nba_daily_report_2026-04-17.html" aria-current="page"><i class="ph ph-basketball"></i> 2026-04-17</a></li>
@@ -534,6 +603,19 @@
           break;
         }
       }
+    });
+
+    // Collapsible history
+    const historyToggle = document.getElementById('history-toggle');
+    const historyList = document.getElementById('history-list');
+    const historyCaret = document.getElementById('history-caret');
+    historyToggle.addEventListener('click', () => {
+      const collapsed = historyList.classList.toggle('collapsed');
+      historyCaret.classList.toggle('rotated', collapsed);
+      historyToggle.setAttribute('aria-expanded', String(!collapsed));
+    });
+    historyToggle.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); historyToggle.click(); }
     });
 
     // Link click fade-out transition
