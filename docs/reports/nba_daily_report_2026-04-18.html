@@ -442,26 +442,7 @@
     .streak-win { color: #22c55e; font-weight: 600; }
     .streak-loss { color: #ef4444; font-weight: 600; }
 
-    /* Bracket */
-    .bracket-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .bracket-conf { }
-    .bracket-conf-title { font-size: 0.9rem; font-weight: 600; color: #f0f6fc; margin-bottom: 0.4rem; }
-    .bracket-round-label { font-size: 0.7rem; color: var(--accent-light); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.3rem; }
-    .bracket-matchups { display: flex; flex-direction: column; gap: 0.75rem; }
-    .matchup { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .matchup-team { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; transition: background 0.2s; }
-    .matchup-team.winner { background: rgba(99,102,241,0.12); }
-    .matchup-team.loser { opacity: 0.4; }
-    .matchup-team.leading { background: rgba(99,102,241,0.06); }
-    .matchup-seed { font-size: 0.7rem; color: var(--text-muted); width: 1rem; flex-shrink: 0; }
-    .matchup-name { flex: 1; font-size: 0.8rem; font-weight: 500; color: #cdd9e5 !important; border-bottom: none !important; }
-    .matchup-name:hover { color: var(--accent-light) !important; }
-    .matchup-wins { font-size: 0.875rem; font-weight: 700; color: var(--accent-light); min-width: 1rem; text-align: right; }
-    .matchup-team.winner .matchup-wins { color: #22c55e; }
-    .matchup-status { text-align: center; font-size: 0.7rem; color: var(--text-muted); padding: 0.2rem 0.5rem; background: rgba(0,0,0,0.25); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-
     @media (max-width: 640px) {
-      .bracket-grid { grid-template-columns: 1fr; }
       .minor-col { display: none; }
     }
   </style>
@@ -483,7 +464,6 @@
       <p class="sidebar-label">快速導覽</p>
       <ul class="sidebar-nav">
     <li><a href="../standings.html"><i class="ph ph-trophy"></i> 球隊排名</a></li>
-    <li><a href="../playoffs.html"><i class="ph ph-brackets-curly"></i> 季後賽形勢</a></li>
       </ul>
       <div class="sidebar-section-header" id="history-toggle" role="button" tabindex="0" aria-expanded="true">
         <p class="sidebar-label" style="margin-bottom:0">歷史報告</p>

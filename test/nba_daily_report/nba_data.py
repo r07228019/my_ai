@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
-
 from nba_api.live.nba.endpoints import boxscore, scoreboard
 
 logger = logging.getLogger(__name__)
@@ -130,39 +129,3 @@ def fetch_standings() -> dict:
     return {"East": east, "West": west, "season": season}
 
 
-def fetch_playoff_picture() -> dict:
-    """Fetch current playoff bracket data. Returns {'East': [...], 'West': [...], 'season': str, 'updated_at': str}.
-
-    Each item in East/West is a matchup dict with keys:
-      high_seed, high_team, high_team_id, low_seed, low_team, low_team_id, high_wins, low_wins
-    """
-    from nba_api.stats.endpoints import playoffpicture
-    season = _current_season()
-    season_year = int(season.split("-")[0])
-    raw = playoffpicture.PlayoffPicture(league_id="00", season_id=f"2{season_year}")
-    result_sets = raw.get_dict()["resultSets"]
-
-    def parse_conf(rs: dict) -> list[dict]:
-        headers, rows = rs["headers"], rs["rowSet"]
-        matchups = []
-        for row in rows:
-            t = dict(zip(headers, row))
-            matchups.append({
-                "high_seed": t.get("HIGH_SEED_RANK", 0),
-                "high_team": t.get("HIGH_SEED_TEAM", ""),
-                "high_team_id": t.get("HIGH_SEED_TEAM_ID"),
-                "low_seed": t.get("LOW_SEED_RANK", 0),
-                "low_team": t.get("LOW_SEED_TEAM", ""),
-                "low_team_id": t.get("LOW_SEED_TEAM_ID"),
-                "high_wins": t.get("HIGH_SEED_SERIES_W") or 0,
-                "low_wins": t.get("HIGH_SEED_SERIES_L") or 0,
-            })
-        return sorted(matchups, key=lambda x: x["high_seed"])
-
-    tpe_now = datetime.now(ZoneInfo("Asia/Taipei"))
-    return {
-        "East": parse_conf(result_sets[0]),   # EastConfPlayoffPicture
-        "West": parse_conf(result_sets[1]),   # WestConfPlayoffPicture
-        "season": season,
-        "updated_at": tpe_now.strftime("%Y-%m-%d %H:%M 台北時間"),
-    }
