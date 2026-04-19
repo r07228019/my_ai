@@ -424,6 +424,10 @@
     .conf-title { font-size: 1rem; font-weight: 600; color: #f0f6fc; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
     .standings-table { width: 100%; border-collapse: collapse; font-size: 0.825rem; }
     .standings-table th { background: #1c2128; padding: 0.45rem 0.6rem; text-align: left; font-weight: 600; color: #cdd9e5; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    .standings-table th[data-col] { cursor: pointer; user-select: none; }
+    .standings-table th[data-col]:hover { color: var(--accent-light); }
+    .standings-table th[data-col].sort-asc::after { content: ' ▲'; font-size: 0.65rem; color: var(--accent-light); }
+    .standings-table th[data-col].sort-desc::after { content: ' ▼'; font-size: 0.65rem; color: var(--accent-light); }
     .standings-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid #21262d; color: #adbac7; white-space: nowrap; }
     .standings-table tr:hover td { background: rgba(255,255,255,0.02); }
     .standings-table tr.playin-zone td { border-top: 1px dashed rgba(251,191,36,0.4); }
@@ -501,13 +505,65 @@
       </div>
       <div class="playoffs-page">
   <p class="data-note">2025-26 賽季季後賽　· 資料來源：NBA API</p>
-  <p class="data-note updated-at">最後更新：2026-04-19 18:47 台北時間</p>
+  <p class="data-note updated-at">最後更新：2026-04-19 19:03 台北時間</p>
   <div class="bracket-grid">
     
       <div class="bracket-conf">
         <h3 class="bracket-conf-title">西區 Western Conference</h3>
         <div class="bracket-round-label"><i class="ph ph-flag-pennant"></i> 首輪 First Round</div>
         <div class="bracket-matchups">
+        <div class="matchup">
+          <div class="matchup-team leading">
+            <span class="matchup-seed">1</span>
+            <a href="https://www.nba.com/team/1610612760" target="_blank" rel="noopener" class="team-link matchup-name">Oklahoma City</a>
+            <span class="matchup-wins">3</span>
+          </div>
+          <div class="matchup-status">系列賽 3–1</div>
+          <div class="matchup-team trailing">
+            <span class="matchup-seed">8</span>
+            <a href="https://www.nba.com/team/1610612757" target="_blank" rel="noopener" class="team-link matchup-name">Portland</a>
+            <span class="matchup-wins">1</span>
+          </div>
+        </div>
+        <div class="matchup">
+          <div class="matchup-team ">
+            <span class="matchup-seed">2</span>
+            <a href="https://www.nba.com/team/1610612759" target="_blank" rel="noopener" class="team-link matchup-name">San Antonio</a>
+            <span class="matchup-wins">2</span>
+          </div>
+          <div class="matchup-status">系列賽 2–2</div>
+          <div class="matchup-team ">
+            <span class="matchup-seed">7</span>
+            <a href="https://www.nba.com/team/1610612756" target="_blank" rel="noopener" class="team-link matchup-name">Phoenix</a>
+            <span class="matchup-wins">2</span>
+          </div>
+        </div>
+        <div class="matchup">
+          <div class="matchup-team leading">
+            <span class="matchup-seed">3</span>
+            <a href="https://www.nba.com/team/1610612743" target="_blank" rel="noopener" class="team-link matchup-name">Denver</a>
+            <span class="matchup-wins">3</span>
+          </div>
+          <div class="matchup-status">系列賽 3–1</div>
+          <div class="matchup-team trailing">
+            <span class="matchup-seed">6</span>
+            <a href="https://www.nba.com/team/1610612750" target="_blank" rel="noopener" class="team-link matchup-name">Minnesota</a>
+            <span class="matchup-wins">1</span>
+          </div>
+        </div>
+        <div class="matchup">
+          <div class="matchup-team leading">
+            <span class="matchup-seed">4</span>
+            <a href="https://www.nba.com/team/1610612747" target="_blank" rel="noopener" class="team-link matchup-name">L.A. Lakers</a>
+            <span class="matchup-wins">2</span>
+          </div>
+          <div class="matchup-status">系列賽 2–1</div>
+          <div class="matchup-team trailing">
+            <span class="matchup-seed">5</span>
+            <a href="https://www.nba.com/team/1610612745" target="_blank" rel="noopener" class="team-link matchup-name">Houston</a>
+            <span class="matchup-wins">1</span>
+          </div>
+        </div>
         </div>
       </div>
     
@@ -515,6 +571,58 @@
         <h3 class="bracket-conf-title">東區 Eastern Conference</h3>
         <div class="bracket-round-label"><i class="ph ph-flag-pennant"></i> 首輪 First Round</div>
         <div class="bracket-matchups">
+        <div class="matchup">
+          <div class="matchup-team ">
+            <span class="matchup-seed">1</span>
+            <a href="https://www.nba.com/team/1610612765" target="_blank" rel="noopener" class="team-link matchup-name">Detroit</a>
+            <span class="matchup-wins">2</span>
+          </div>
+          <div class="matchup-status">系列賽 2–2</div>
+          <div class="matchup-team ">
+            <span class="matchup-seed">8</span>
+            <a href="https://www.nba.com/team/1610612753" target="_blank" rel="noopener" class="team-link matchup-name">Orlando</a>
+            <span class="matchup-wins">2</span>
+          </div>
+        </div>
+        <div class="matchup">
+          <div class="matchup-team ">
+            <span class="matchup-seed">2</span>
+            <a href="https://www.nba.com/team/1610612738" target="_blank" rel="noopener" class="team-link matchup-name">Boston</a>
+            <span class="matchup-wins">2</span>
+          </div>
+          <div class="matchup-status">系列賽 2–2</div>
+          <div class="matchup-team ">
+            <span class="matchup-seed">7</span>
+            <a href="https://www.nba.com/team/1610612755" target="_blank" rel="noopener" class="team-link matchup-name">Philadelphia</a>
+            <span class="matchup-wins">2</span>
+          </div>
+        </div>
+        <div class="matchup">
+          <div class="matchup-team leading">
+            <span class="matchup-seed">3</span>
+            <a href="https://www.nba.com/team/1610612752" target="_blank" rel="noopener" class="team-link matchup-name">New York</a>
+            <span class="matchup-wins">2</span>
+          </div>
+          <div class="matchup-status">系列賽 2–1</div>
+          <div class="matchup-team trailing">
+            <span class="matchup-seed">6</span>
+            <a href="https://www.nba.com/team/1610612737" target="_blank" rel="noopener" class="team-link matchup-name">Atlanta</a>
+            <span class="matchup-wins">1</span>
+          </div>
+        </div>
+        <div class="matchup">
+          <div class="matchup-team trailing">
+            <span class="matchup-seed">4</span>
+            <a href="https://www.nba.com/team/1610612739" target="_blank" rel="noopener" class="team-link matchup-name">Cleveland</a>
+            <span class="matchup-wins">0</span>
+          </div>
+          <div class="matchup-status">系列賽 0–3</div>
+          <div class="matchup-team leading">
+            <span class="matchup-seed">5</span>
+            <a href="https://www.nba.com/team/1610612761" target="_blank" rel="noopener" class="team-link matchup-name">Toronto</a>
+            <span class="matchup-wins">3</span>
+          </div>
+        </div>
         </div>
       </div>
   </div>
@@ -595,6 +703,41 @@
           break;
         }
       }
+    });
+
+    // Sortable standings tables
+    document.querySelectorAll('.standings-table').forEach(table => {
+      const headers = table.querySelectorAll('th[data-col]');
+      let sortCol = null, sortAsc = true;
+      headers.forEach(th => {
+        th.addEventListener('click', () => {
+          const col = parseInt(th.dataset.col);
+          const numeric = th.dataset.numeric === '1';
+          if (sortCol === col) {
+            sortAsc = !sortAsc;
+          } else {
+            sortCol = col;
+            sortAsc = numeric ? false : true;
+          }
+          headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+          th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+          const tbody = table.querySelector('tbody');
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+          rows.sort((a, b) => {
+            const av = a.cells[col] ? a.cells[col].textContent.trim() : '';
+            const bv = b.cells[col] ? b.cells[col].textContent.trim() : '';
+            let cmp;
+            if (numeric) {
+              const an = parseFloat(av) || 0, bn = parseFloat(bv) || 0;
+              cmp = an - bn;
+            } else {
+              cmp = av.localeCompare(bv, 'zh-TW');
+            }
+            return sortAsc ? cmp : -cmp;
+          });
+          rows.forEach(r => tbody.appendChild(r));
+        });
+      });
     });
 
     // Collapsible history

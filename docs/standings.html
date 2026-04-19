@@ -424,6 +424,10 @@
     .conf-title { font-size: 1rem; font-weight: 600; color: #f0f6fc; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
     .standings-table { width: 100%; border-collapse: collapse; font-size: 0.825rem; }
     .standings-table th { background: #1c2128; padding: 0.45rem 0.6rem; text-align: left; font-weight: 600; color: #cdd9e5; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    .standings-table th[data-col] { cursor: pointer; user-select: none; }
+    .standings-table th[data-col]:hover { color: var(--accent-light); }
+    .standings-table th[data-col].sort-asc::after { content: ' ▲'; font-size: 0.65rem; color: var(--accent-light); }
+    .standings-table th[data-col].sort-desc::after { content: ' ▼'; font-size: 0.65rem; color: var(--accent-light); }
     .standings-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid #21262d; color: #adbac7; white-space: nowrap; }
     .standings-table tr:hover td { background: rgba(255,255,255,0.02); }
     .standings-table tr.playin-zone td { border-top: 1px dashed rgba(251,191,36,0.4); }
@@ -506,8 +510,15 @@
       <h2 class="conf-title"><i class="ph ph-trophy"></i> 東區 Eastern Conference</h2>
       <table class="standings-table">
         <thead><tr>
-          <th>#</th><th>球隊</th><th>勝</th><th>敗</th><th>勝率</th><th>差距</th>
-          <th class="minor-col">主場</th><th class="minor-col">客場</th><th>近況</th>
+          <th>#</th>
+          <th data-col="1">球隊</th>
+          <th data-col="2" data-numeric="1">勝</th>
+          <th data-col="3" data-numeric="1">敗</th>
+          <th data-col="4" data-numeric="1">勝率</th>
+          <th data-col="5">差距</th>
+          <th class="minor-col" data-col="6">主場</th>
+          <th class="minor-col" data-col="7">客場</th>
+          <th data-col="8">近況</th>
         </tr></thead>
         <tbody>
       <tr>
@@ -517,8 +528,8 @@
         </td>
         <td>60</td><td>22</td><td>0.732</td>
         <td>-</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">31-9</td>
+        <td class="minor-col">28-13</td>
         <td class="streak-win">W 3</td>
       </tr>
       <tr>
@@ -528,8 +539,8 @@
         </td>
         <td>56</td><td>26</td><td>0.683</td>
         <td>4.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">30-11</td>
+        <td class="minor-col">26-15</td>
         <td class="streak-win">W 2</td>
       </tr>
       <tr>
@@ -539,8 +550,8 @@
         </td>
         <td>53</td><td>29</td><td>0.646</td>
         <td>7.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">30-10</td>
+        <td class="minor-col">22-19</td>
         <td class="streak-loss">L 1</td>
       </tr>
       <tr>
@@ -550,8 +561,8 @@
         </td>
         <td>52</td><td>30</td><td>0.634</td>
         <td>8.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">27-14</td>
+        <td class="minor-col">25-16</td>
         <td class="streak-win">W 1</td>
       </tr>
       <tr>
@@ -561,8 +572,8 @@
         </td>
         <td>46</td><td>36</td><td>0.561</td>
         <td>14.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">24-17</td>
+        <td class="minor-col">22-19</td>
         <td class="streak-win">W 1</td>
       </tr>
       <tr>
@@ -572,8 +583,8 @@
         </td>
         <td>46</td><td>36</td><td>0.561</td>
         <td>14.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">24-17</td>
+        <td class="minor-col">22-19</td>
         <td class="streak-loss">L 1</td>
       </tr>
       <tr>
@@ -583,8 +594,8 @@
         </td>
         <td>45</td><td>37</td><td>0.549</td>
         <td>15.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">23-18</td>
+        <td class="minor-col">22-19</td>
         <td class="streak-win">W 2</td>
       </tr>
       <tr>
@@ -594,8 +605,8 @@
         </td>
         <td>45</td><td>37</td><td>0.549</td>
         <td>15.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">25-15</td>
+        <td class="minor-col">19-20</td>
         <td class="streak-loss">L 1</td>
       </tr>
       <tr class="zone-divider playin-zone">
@@ -605,8 +616,8 @@
         </td>
         <td>44</td><td>38</td><td>0.537</td>
         <td>16.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">21-20</td>
+        <td class="minor-col">23-18</td>
         <td class="streak-win">W 1</td>
       </tr>
       <tr>
@@ -616,8 +627,8 @@
         </td>
         <td>43</td><td>39</td><td>0.524</td>
         <td>17.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">26-15</td>
+        <td class="minor-col">17-24</td>
         <td class="streak-win">W 2</td>
       </tr>
       <tr class="zone-divider out-zone">
@@ -627,8 +638,8 @@
         </td>
         <td>32</td><td>50</td><td>0.390</td>
         <td>28.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">19-22</td>
+        <td class="minor-col">13-28</td>
         <td class="streak-loss">L 1</td>
       </tr>
       <tr>
@@ -638,8 +649,8 @@
         </td>
         <td>31</td><td>51</td><td>0.378</td>
         <td>29.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">18-23</td>
+        <td class="minor-col">13-28</td>
         <td class="streak-loss">L 2</td>
       </tr>
       <tr>
@@ -649,8 +660,8 @@
         </td>
         <td>20</td><td>62</td><td>0.244</td>
         <td>40.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">12-29</td>
+        <td class="minor-col">8-33</td>
         <td class="streak-loss">L 3</td>
       </tr>
       <tr>
@@ -660,8 +671,8 @@
         </td>
         <td>19</td><td>63</td><td>0.232</td>
         <td>41.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">11-30</td>
+        <td class="minor-col">8-33</td>
         <td class="streak-loss">L 2</td>
       </tr>
       <tr>
@@ -671,8 +682,8 @@
         </td>
         <td>17</td><td>65</td><td>0.207</td>
         <td>43.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">11-30</td>
+        <td class="minor-col">6-35</td>
         <td class="streak-loss">L 10</td>
       </tr>
         </tbody>
@@ -683,8 +694,15 @@
       <h2 class="conf-title"><i class="ph ph-trophy"></i> 西區 Western Conference</h2>
       <table class="standings-table">
         <thead><tr>
-          <th>#</th><th>球隊</th><th>勝</th><th>敗</th><th>勝率</th><th>差距</th>
-          <th class="minor-col">主場</th><th class="minor-col">客場</th><th>近況</th>
+          <th>#</th>
+          <th data-col="1">球隊</th>
+          <th data-col="2" data-numeric="1">勝</th>
+          <th data-col="3" data-numeric="1">敗</th>
+          <th data-col="4" data-numeric="1">勝率</th>
+          <th data-col="5">差距</th>
+          <th class="minor-col" data-col="6">主場</th>
+          <th class="minor-col" data-col="7">客場</th>
+          <th data-col="8">近況</th>
         </tr></thead>
         <tbody>
       <tr>
@@ -694,8 +712,8 @@
         </td>
         <td>64</td><td>18</td><td>0.780</td>
         <td>-</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">34-7</td>
+        <td class="minor-col">30-10</td>
         <td class="streak-loss">L 2</td>
       </tr>
       <tr>
@@ -705,8 +723,8 @@
         </td>
         <td>62</td><td>20</td><td>0.756</td>
         <td>2.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">32-8</td>
+        <td class="minor-col">29-12</td>
         <td class="streak-loss">L 1</td>
       </tr>
       <tr>
@@ -716,8 +734,8 @@
         </td>
         <td>54</td><td>28</td><td>0.659</td>
         <td>10.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">28-13</td>
+        <td class="minor-col">26-15</td>
         <td class="streak-win">W 12</td>
       </tr>
       <tr>
@@ -727,8 +745,8 @@
         </td>
         <td>53</td><td>29</td><td>0.646</td>
         <td>11.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">28-13</td>
+        <td class="minor-col">25-16</td>
         <td class="streak-win">W 3</td>
       </tr>
       <tr>
@@ -738,8 +756,8 @@
         </td>
         <td>52</td><td>30</td><td>0.634</td>
         <td>12.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">30-11</td>
+        <td class="minor-col">22-19</td>
         <td class="streak-win">W 1</td>
       </tr>
       <tr>
@@ -749,8 +767,8 @@
         </td>
         <td>49</td><td>33</td><td>0.598</td>
         <td>15.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">26-15</td>
+        <td class="minor-col">23-18</td>
         <td class="streak-win">W 2</td>
       </tr>
       <tr>
@@ -760,8 +778,8 @@
         </td>
         <td>45</td><td>37</td><td>0.549</td>
         <td>19.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">25-16</td>
+        <td class="minor-col">20-21</td>
         <td class="streak-win">W 1</td>
       </tr>
       <tr>
@@ -771,8 +789,8 @@
         </td>
         <td>42</td><td>40</td><td>0.512</td>
         <td>22.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">24-17</td>
+        <td class="minor-col">18-23</td>
         <td class="streak-win">W 2</td>
       </tr>
       <tr class="zone-divider playin-zone">
@@ -782,8 +800,8 @@
         </td>
         <td>42</td><td>40</td><td>0.512</td>
         <td>22.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">23-18</td>
+        <td class="minor-col">19-22</td>
         <td class="streak-win">W 1</td>
       </tr>
       <tr>
@@ -793,8 +811,8 @@
         </td>
         <td>37</td><td>45</td><td>0.451</td>
         <td>27.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">22-19</td>
+        <td class="minor-col">15-26</td>
         <td class="streak-loss">L 3</td>
       </tr>
       <tr class="zone-divider out-zone">
@@ -804,8 +822,8 @@
         </td>
         <td>26</td><td>56</td><td>0.317</td>
         <td>38.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">17-24</td>
+        <td class="minor-col">9-32</td>
         <td class="streak-loss">L 2</td>
       </tr>
       <tr>
@@ -815,8 +833,8 @@
         </td>
         <td>26</td><td>56</td><td>0.317</td>
         <td>38.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">16-25</td>
+        <td class="minor-col">10-30</td>
         <td class="streak-win">W 1</td>
       </tr>
       <tr>
@@ -826,8 +844,8 @@
         </td>
         <td>25</td><td>57</td><td>0.305</td>
         <td>39.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">13-27</td>
+        <td class="minor-col">11-29</td>
         <td class="streak-loss">L 8</td>
       </tr>
       <tr>
@@ -837,8 +855,8 @@
         </td>
         <td>22</td><td>60</td><td>0.268</td>
         <td>42.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">15-26</td>
+        <td class="minor-col">7-34</td>
         <td class="streak-loss">L 1</td>
       </tr>
       <tr>
@@ -848,8 +866,8 @@
         </td>
         <td>22</td><td>60</td><td>0.268</td>
         <td>42.0</td>
-        <td class="minor-col"></td>
-        <td class="minor-col"></td>
+        <td class="minor-col">14-27</td>
+        <td class="minor-col">8-33</td>
         <td class="streak-loss">L 1</td>
       </tr>
         </tbody>
@@ -932,6 +950,41 @@
           break;
         }
       }
+    });
+
+    // Sortable standings tables
+    document.querySelectorAll('.standings-table').forEach(table => {
+      const headers = table.querySelectorAll('th[data-col]');
+      let sortCol = null, sortAsc = true;
+      headers.forEach(th => {
+        th.addEventListener('click', () => {
+          const col = parseInt(th.dataset.col);
+          const numeric = th.dataset.numeric === '1';
+          if (sortCol === col) {
+            sortAsc = !sortAsc;
+          } else {
+            sortCol = col;
+            sortAsc = numeric ? false : true;
+          }
+          headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+          th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+          const tbody = table.querySelector('tbody');
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+          rows.sort((a, b) => {
+            const av = a.cells[col] ? a.cells[col].textContent.trim() : '';
+            const bv = b.cells[col] ? b.cells[col].textContent.trim() : '';
+            let cmp;
+            if (numeric) {
+              const an = parseFloat(av) || 0, bn = parseFloat(bv) || 0;
+              cmp = an - bn;
+            } else {
+              cmp = av.localeCompare(bv, 'zh-TW');
+            }
+            return sortAsc ? cmp : -cmp;
+          });
+          rows.forEach(r => tbody.appendChild(r));
+        });
+      });
     });
 
     // Collapsible history

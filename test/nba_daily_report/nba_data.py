@@ -117,8 +117,8 @@ def fetch_standings() -> dict:
             "pct": f"{float(t.get('WinPCT') or 0):.3f}",
             "gb": "-" if not gb or gb == 0 else str(gb),
             "streak": t.get("strCurrentStreak", ""),
-            "home": t.get("Home", ""),
-            "road": t.get("Road", ""),
+            "home": t.get("HOME", ""),
+            "road": t.get("ROAD", ""),
             "clinch": t.get("ClinchIndicator", "") or "",
         }
         if t.get("Conference") == "East":
@@ -131,7 +131,11 @@ def fetch_standings() -> dict:
 
 
 def fetch_playoff_picture() -> dict:
-    """Fetch current playoff bracket data. Returns {'East': [...], 'West': [...], 'season': str, 'updated_at': str}."""
+    """Fetch current playoff bracket data. Returns {'East': [...], 'West': [...], 'season': str, 'updated_at': str}.
+
+    Each item in East/West is a matchup dict with keys:
+      high_seed, high_team, high_team_id, low_seed, low_team, low_team_id, high_wins, low_wins
+    """
     from nba_api.stats.endpoints import playoffpicture
     season = _current_season()
     season_year = int(season.split("-")[0])
@@ -140,24 +144,20 @@ def fetch_playoff_picture() -> dict:
 
     def parse_conf(rs: dict) -> list[dict]:
         headers, rows = rs["headers"], rs["rowSet"]
-        return sorted(
-            [
-                {
-                    "seed": t.get("CURRENT_SEED", 0),
-                    "team_id": t.get("TEAM_ID"),
-                    "city": t.get("TEAM_CITY", ""),
-                    "name": t.get("TEAM_NICKNAME", ""),
-                    "series_wins": t.get("SERIES_WINS") or 0,
-                    "series_losses": t.get("SERIES_LOSSES") or 0,
-                    "vs_seed": t.get("VS_SEED"),
-                    "vs_city": t.get("VS_CITY", ""),
-                    "vs_name": t.get("VS_NAME", ""),
-                    "vs_id": t.get("VS_TEAM_ID"),
-                }
-                for t in [dict(zip(headers, row)) for row in rows]
-            ],
-            key=lambda x: x["seed"],
-        )
+        matchups = []
+        for row in rows:
+            t = dict(zip(headers, row))
+            matchups.append({
+                "high_seed": t.get("HIGH_SEED_RANK", 0),
+                "high_team": t.get("HIGH_SEED_TEAM", ""),
+                "high_team_id": t.get("HIGH_SEED_TEAM_ID"),
+                "low_seed": t.get("LOW_SEED_RANK", 0),
+                "low_team": t.get("LOW_SEED_TEAM", ""),
+                "low_team_id": t.get("LOW_SEED_TEAM_ID"),
+                "high_wins": t.get("HIGH_SEED_SERIES_W") or 0,
+                "low_wins": t.get("HIGH_SEED_SERIES_L") or 0,
+            })
+        return sorted(matchups, key=lambda x: x["high_seed"])
 
     tpe_now = datetime.now(ZoneInfo("Asia/Taipei"))
     return {

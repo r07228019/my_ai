@@ -59,8 +59,15 @@ def _standings_html(standings: dict) -> str:
       <h2 class="conf-title"><i class="ph ph-trophy"></i> {conf_name}</h2>
       <table class="standings-table">
         <thead><tr>
-          <th>#</th><th>球隊</th><th>勝</th><th>敗</th><th>勝率</th><th>差距</th>
-          <th class="minor-col">主場</th><th class="minor-col">客場</th><th>近況</th>
+          <th>#</th>
+          <th data-col="1">球隊</th>
+          <th data-col="2" data-numeric="1">勝</th>
+          <th data-col="3" data-numeric="1">敗</th>
+          <th data-col="4" data-numeric="1">勝率</th>
+          <th data-col="5">差距</th>
+          <th class="minor-col" data-col="6">主場</th>
+          <th class="minor-col" data-col="7">客場</th>
+          <th data-col="8">近況</th>
         </tr></thead>
         <tbody>{rows_html}
         </tbody>
@@ -84,42 +91,37 @@ def _playoffs_html(playoff_data: dict) -> str:
     season = playoff_data.get("season", "")
     updated_at = playoff_data.get("updated_at", "")
 
-    def render_conf(teams: list, conf_name: str) -> str:
-        if not teams:
+    def render_conf(matchups: list, conf_name: str) -> str:
+        if not matchups:
             return ""
-        by_seed = {t["seed"]: t for t in teams}
         matchups_html = ""
-        for top_s, bot_s in [(1, 8), (4, 5), (3, 6), (2, 7)]:
-            top = by_seed.get(top_s)
-            bot = by_seed.get(bot_s)
-            if not top or not bot:
-                continue
-            tw = top.get("series_wins") or 0
-            bw = bot.get("series_wins") or 0
-            total = tw + bw
-            if tw == 4:
-                status, top_cls, bot_cls = f"晉級 {tw}–{bw}", "winner", "loser"
-            elif bw == 4:
-                status, top_cls, bot_cls = f"淘汰 {tw}–{bw}", "loser", "winner"
+        for m in matchups:
+            hw = m["high_wins"]
+            lw = m["low_wins"]
+            total = hw + lw
+            if hw == 4:
+                status, top_cls, bot_cls = f"晉級 {hw}–{lw}", "winner", "loser"
+            elif lw == 4:
+                status, top_cls, bot_cls = f"淘汰 {hw}–{lw}", "loser", "winner"
             elif total > 0:
-                status = f"系列賽 {tw}–{bw}"
-                top_cls = "leading" if tw > bw else ("trailing" if tw < bw else "")
-                bot_cls = "leading" if bw > tw else ("trailing" if bw < tw else "")
+                status = f"系列賽 {hw}–{lw}"
+                top_cls = "leading" if hw > lw else ("trailing" if hw < lw else "")
+                bot_cls = "leading" if lw > hw else ("trailing" if lw < hw else "")
             else:
                 status, top_cls, bot_cls = "即將開打", "", ""
 
             matchups_html += f"""
         <div class="matchup">
           <div class="matchup-team {top_cls}">
-            <span class="matchup-seed">{top_s}</span>
-            <a href="https://www.nba.com/team/{top.get('team_id','')}" target="_blank" rel="noopener" class="team-link matchup-name">{top['city']} {top['name']}</a>
-            <span class="matchup-wins">{tw if total > 0 else ''}</span>
+            <span class="matchup-seed">{m['high_seed']}</span>
+            <a href="https://www.nba.com/team/{m['high_team_id']}" target="_blank" rel="noopener" class="team-link matchup-name">{m['high_team']}</a>
+            <span class="matchup-wins">{hw if total > 0 else ''}</span>
           </div>
           <div class="matchup-status">{status}</div>
           <div class="matchup-team {bot_cls}">
-            <span class="matchup-seed">{bot_s}</span>
-            <a href="https://www.nba.com/team/{bot.get('team_id','')}" target="_blank" rel="noopener" class="team-link matchup-name">{bot['city']} {bot['name']}</a>
-            <span class="matchup-wins">{bw if total > 0 else ''}</span>
+            <span class="matchup-seed">{m['low_seed']}</span>
+            <a href="https://www.nba.com/team/{m['low_team_id']}" target="_blank" rel="noopener" class="team-link matchup-name">{m['low_team']}</a>
+            <span class="matchup-wins">{lw if total > 0 else ''}</span>
           </div>
         </div>"""
 

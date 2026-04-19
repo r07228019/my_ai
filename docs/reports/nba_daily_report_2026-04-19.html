@@ -424,6 +424,10 @@
     .conf-title { font-size: 1rem; font-weight: 600; color: #f0f6fc; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
     .standings-table { width: 100%; border-collapse: collapse; font-size: 0.825rem; }
     .standings-table th { background: #1c2128; padding: 0.45rem 0.6rem; text-align: left; font-weight: 600; color: #cdd9e5; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    .standings-table th[data-col] { cursor: pointer; user-select: none; }
+    .standings-table th[data-col]:hover { color: var(--accent-light); }
+    .standings-table th[data-col].sort-asc::after { content: ' ▲'; font-size: 0.65rem; color: var(--accent-light); }
+    .standings-table th[data-col].sort-desc::after { content: ' ▼'; font-size: 0.65rem; color: var(--accent-light); }
     .standings-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid #21262d; color: #adbac7; white-space: nowrap; }
     .standings-table tr:hover td { background: rgba(255,255,255,0.02); }
     .standings-table tr.playin-zone td { border-top: 1px dashed rgba(251,191,36,0.4); }
@@ -610,6 +614,41 @@
           break;
         }
       }
+    });
+
+    // Sortable standings tables
+    document.querySelectorAll('.standings-table').forEach(table => {
+      const headers = table.querySelectorAll('th[data-col]');
+      let sortCol = null, sortAsc = true;
+      headers.forEach(th => {
+        th.addEventListener('click', () => {
+          const col = parseInt(th.dataset.col);
+          const numeric = th.dataset.numeric === '1';
+          if (sortCol === col) {
+            sortAsc = !sortAsc;
+          } else {
+            sortCol = col;
+            sortAsc = numeric ? false : true;
+          }
+          headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+          th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+          const tbody = table.querySelector('tbody');
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+          rows.sort((a, b) => {
+            const av = a.cells[col] ? a.cells[col].textContent.trim() : '';
+            const bv = b.cells[col] ? b.cells[col].textContent.trim() : '';
+            let cmp;
+            if (numeric) {
+              const an = parseFloat(av) || 0, bn = parseFloat(bv) || 0;
+              cmp = an - bn;
+            } else {
+              cmp = av.localeCompare(bv, 'zh-TW');
+            }
+            return sortAsc ? cmp : -cmp;
+          });
+          rows.forEach(r => tbody.appendChild(r));
+        });
+      });
     });
 
     // Collapsible history
