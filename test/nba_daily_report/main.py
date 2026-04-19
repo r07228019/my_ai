@@ -479,6 +479,15 @@ def _render_page(
       border-bottom-color: #fde68a;
       text-decoration: none;
     }}
+    .date-link {{
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(240, 246, 252, 0.35);
+      transition: border-color 0.2s;
+    }}
+    .date-link:hover {{
+      border-bottom-color: rgba(240, 246, 252, 0.8);
+    }}
     .content ul, .content ol {{ padding-left: 1.5rem; margin-bottom: 0.9rem; color: #adbac7; }}
     .content li {{ margin-bottom: 0.25rem; line-height: 1.75; }}
     .content hr {{ border: none; border-top: 1px solid var(--border); margin: 2rem 0; }}
@@ -767,6 +776,23 @@ def _linkify_teams(html: str, team_map: dict) -> str:
     )
 
 
+def _linkify_report_date(html: str, date_str: str) -> str:
+    """Wrap the Chinese date in the H1 title with a link to nba.com/games?date=YYYY-MM-DD."""
+    import re as _re
+
+    url = f"https://www.nba.com/games?date={date_str}"
+    date_pattern = _re.compile(r"(\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日)")
+    replacement = f'<a href="{url}" target="_blank" rel="noopener" class="date-link">\\1</a>'
+    # Only replace inside the first <h1> block
+    return _re.sub(
+        r"(<h1[^>]*>)(.*?)(</h1>)",
+        lambda m: m.group(1) + date_pattern.sub(replacement, m.group(2), count=1) + m.group(3),
+        html,
+        count=1,
+        flags=_re.DOTALL,
+    )
+
+
 def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
     """Generate static HTML site from the last keep_n markdown reports.
 
@@ -787,12 +813,15 @@ def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
     reports = [
         {
             "date": p.stem.replace("nba_daily_report_", ""),
-            "body": _linkify_teams(
-                _linkify_players(
-                    md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"]),
-                    player_map,
+            "body": _linkify_report_date(
+                _linkify_teams(
+                    _linkify_players(
+                        md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"]),
+                        player_map,
+                    ),
+                    team_map,
                 ),
-                team_map,
+                p.stem.replace("nba_daily_report_", ""),
             ),
             "filename": f"{p.stem}.html",
         }
