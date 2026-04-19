@@ -157,8 +157,14 @@ def _render_page(
         )
         active = ' aria-current="page"' if r["date"] == active_date else ""
         delay = f"{i * 0.06 + 0.05:.2f}s"
-        sidebar_items.append(f'        <li style="animation-delay:{delay}"><a href="{href}"{active}>{r["date"]}</a></li>')
+        sidebar_items.append(f'        <li style="animation-delay:{delay}"><a href="{href}"{active}><i class="ph ph-basketball"></i> {r["date"]}</a></li>')
     sidebar = "\n".join(sidebar_items)
+    try:
+        from datetime import datetime as _dt
+        _d = _dt.strptime(active_date, "%Y-%m-%d")
+        hero_date = f"{_d.year} 年 {_d.month} 月 {_d.day} 日"
+    except Exception:
+        hero_date = active_date
     return f"""<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -168,6 +174,7 @@ def _render_page(
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <style>
     :root {{
       --bg: #0d1117;
@@ -186,7 +193,8 @@ def _render_page(
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
     html {{ scroll-behavior: smooth; }}
     body {{
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='18' fill='none' stroke='%236366f1' stroke-width='0.6' opacity='0.06'/%3E%3Cline x1='12' y1='30' x2='48' y2='30' stroke='%236366f1' stroke-width='0.4' opacity='0.04'/%3E%3Cline x1='30' y1='12' x2='30' y2='48' stroke='%236366f1' stroke-width='0.4' opacity='0.04'/%3E%3C/svg%3E");
       color: var(--text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
@@ -328,6 +336,82 @@ def _render_page(
       to   {{ opacity: 1; transform: translateY(0); }}
     }}
 
+    /* Hero banner */
+    .hero-banner {{
+      position: relative;
+      overflow: hidden;
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #1a1f35 0%, #0d1020 60%, #0f172a 100%);
+      border-radius: 12px;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }}
+    .hero-banner::before {{
+      content: '';
+      position: absolute;
+      right: -50px; top: -50px;
+      width: 180px; height: 180px;
+      border: 2px solid rgba(99, 102, 241, 0.15);
+      border-radius: 50%;
+      pointer-events: none;
+    }}
+    .hero-banner::after {{
+      content: '';
+      position: absolute;
+      right: 20px; top: 20px;
+      width: 100px; height: 100px;
+      border: 1px solid rgba(129, 140, 248, 0.1);
+      border-radius: 50%;
+      pointer-events: none;
+    }}
+    .hero-icon {{
+      font-size: 2.5rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5));
+      flex-shrink: 0;
+    }}
+    .hero-text {{ display: flex; flex-direction: column; gap: 0.2rem; }}
+    .hero-label {{
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-light);
+    }}
+    .hero-date {{
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      letter-spacing: -0.01em;
+    }}
+
+    /* H2 accent bar */
+    .content h2 {{ position: relative; padding-left: 0.85rem; }}
+    .content h2::before {{
+      content: '';
+      position: absolute;
+      left: 0; top: 15%; bottom: 15%;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-light));
+      border-radius: 2px;
+    }}
+
+    /* Footer */
+    .site-footer {{
+      text-align: center;
+      padding: 1.5rem 1rem;
+      margin-top: 3rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border);
+    }}
+    .site-footer a {{ color: var(--accent-light); text-decoration: none; }}
+    .site-footer a:hover {{ text-decoration: underline; }}
+    .site-footer i {{ vertical-align: middle; margin-right: 0.25rem; }}
+
     /* Scroll-triggered section fade */
     .fade-section {{
       opacity: 0;
@@ -458,7 +542,7 @@ def _render_page(
 
   <header>
     <div class="header-inner">
-      <span class="header-title">🏀 NBA Daily Report</span>
+      <span class="header-title"><i class="ph-fill ph-basketball"></i> NBA Daily Report</span>
       <button class="hamburger" id="hamburger" aria-label="選單">☰</button>
     </div>
   </header>
@@ -473,9 +557,26 @@ def _render_page(
       </ul>
     </aside>
     <article class="content">
+      <div class="hero-banner">
+        <span class="hero-icon"><i class="ph-fill ph-basketball"></i></span>
+        <div class="hero-text">
+          <span class="hero-label">NBA Daily Report</span>
+          <span class="hero-date">{hero_date}</span>
+        </div>
+      </div>
       {body_html}
     </article>
   </div>
+
+  <footer class="site-footer">
+    <p>
+      <i class="ph ph-basketball"></i>
+      Powered by <a href="https://www.anthropic.com" target="_blank" rel="noopener">Claude Opus 4.7</a>
+      &nbsp;+&nbsp;
+      <a href="https://github.com/swar/nba_api" target="_blank" rel="noopener">nba_api</a>
+      &nbsp;·&nbsp; Auto-generated daily report
+    </p>
+  </footer>
 
   <button id="back-to-top" aria-label="回到頂部">↑</button>
 
@@ -519,6 +620,28 @@ def _render_page(
       }});
     }}, {{ threshold: 0.1, rootMargin: '0px 0px -30px 0px' }});
     fadeEls.forEach(el => sectionObserver.observe(el));
+
+    // Section heading icon injection (D)
+    const sectionIconMap = [
+      ['戰況', 'ph-basketball'], ['總覽', 'ph-basketball'],
+      ['看點', 'ph-fire'],
+      ['數據', 'ph-chart-bar'],
+      ['事件', 'ph-lightning'],
+      ['人事', 'ph-users'],
+    ];
+    const hasEmoji = str => /\\p{{Emoji_Presentation}}/u.test(str);
+    document.querySelectorAll('.content h2').forEach(h2 => {{
+      if (hasEmoji(h2.textContent)) return;
+      for (const [kw, cls] of sectionIconMap) {{
+        if (h2.textContent.includes(kw)) {{
+          const icon = document.createElement('i');
+          icon.className = `ph ${{cls}}`;
+          icon.style.cssText = 'margin-right:0.4rem;vertical-align:middle;color:var(--accent-light);';
+          h2.prepend(icon);
+          break;
+        }}
+      }}
+    }});
 
     // Link click fade-out transition
     document.querySelectorAll('.sidebar a').forEach(link => {{

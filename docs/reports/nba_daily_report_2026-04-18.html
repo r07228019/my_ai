@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <style>
     :root {
       --bg: #0d1117;
@@ -25,7 +26,8 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='18' fill='none' stroke='%236366f1' stroke-width='0.6' opacity='0.06'/%3E%3Cline x1='12' y1='30' x2='48' y2='30' stroke='%236366f1' stroke-width='0.4' opacity='0.04'/%3E%3Cline x1='30' y1='12' x2='30' y2='48' stroke='%236366f1' stroke-width='0.4' opacity='0.04'/%3E%3C/svg%3E");
       color: var(--text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
@@ -167,6 +169,82 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* Hero banner */
+    .hero-banner {
+      position: relative;
+      overflow: hidden;
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #1a1f35 0%, #0d1020 60%, #0f172a 100%);
+      border-radius: 12px;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      right: -50px; top: -50px;
+      width: 180px; height: 180px;
+      border: 2px solid rgba(99, 102, 241, 0.15);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      right: 20px; top: 20px;
+      width: 100px; height: 100px;
+      border: 1px solid rgba(129, 140, 248, 0.1);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-icon {
+      font-size: 2.5rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5));
+      flex-shrink: 0;
+    }
+    .hero-text { display: flex; flex-direction: column; gap: 0.2rem; }
+    .hero-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-light);
+    }
+    .hero-date {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      letter-spacing: -0.01em;
+    }
+
+    /* H2 accent bar */
+    .content h2 { position: relative; padding-left: 0.85rem; }
+    .content h2::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 15%; bottom: 15%;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-light));
+      border-radius: 2px;
+    }
+
+    /* Footer */
+    .site-footer {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      margin-top: 3rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border);
+    }
+    .site-footer a { color: var(--accent-light); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .site-footer i { vertical-align: middle; margin-right: 0.25rem; }
+
     /* Scroll-triggered section fade */
     .fade-section {
       opacity: 0;
@@ -297,7 +375,7 @@
 
   <header>
     <div class="header-inner">
-      <span class="header-title">🏀 NBA Daily Report</span>
+      <span class="header-title"><i class="ph-fill ph-basketball"></i> NBA Daily Report</span>
       <button class="hamburger" id="hamburger" aria-label="選單">☰</button>
     </div>
   </header>
@@ -308,32 +386,61 @@
     <aside class="sidebar" id="sidebar">
       <p class="sidebar-label">歷史報告</p>
       <ul>
-        <li style="animation-delay:0.05s"><a href="../index.html" aria-current="page">2026-04-18</a></li>
-        <li style="animation-delay:0.11s"><a href="../reports/nba_daily_report_2026-04-17.html">2026-04-17</a></li>
+        <li style="animation-delay:0.05s"><a href="../index.html" aria-current="page"><i class="ph ph-basketball"></i> 2026-04-18</a></li>
+        <li style="animation-delay:0.11s"><a href="../reports/nba_daily_report_2026-04-17.html"><i class="ph ph-basketball"></i> 2026-04-17</a></li>
       </ul>
     </aside>
     <article class="content">
+      <div class="hero-banner">
+        <span class="hero-icon"><i class="ph-fill ph-basketball"></i></span>
+        <div class="hero-text">
+          <span class="hero-label">NBA Daily Report</span>
+          <span class="hero-date">2026 年 4 月 18 日</span>
+        </div>
+      </div>
       <h1>🏀 NBA 每日戰報 — 2026 年 4 月 18 日</h1>
 <h2>當日戰況總覽</h2>
-<p>季後賽首輪戰火正式點燃！本日共有四場比賽登場，橫跨東西區的重量級對決一字排開。唯一開打的克里夫蘭騎士 vs. 多倫多暴龍之戰目前仍在首節進行中，暴龍暫以 8:6 小幅領先；其餘三場包含金塊 vs. 灰狼、尼克 vs. 老鷹，以及備受矚目的湖人 vs. 火箭，均尚未開球。整體而言，這是一個充滿戲劇張力、讓球迷期待拉滿的季後賽之夜。🔥</p>
+<p>季後賽首輪戰火正式點燃！🔥 今日共有四場比賽登場，其中三場已落幕，湖人與火箭的對決正進行到第二節。首日季後賽由地主球隊全面宰制，<strong>騎士、金塊、尼克斯</strong> 三支坐擁主場優勢的強權全數拿下系列賽首勝，分別擊退暴龍、灰狼與老鷹，在各自系列賽中取得 1–0 領先。</p>
+<p>從比賽內容來看，東區雙雄騎士與尼克斯展現季後賽老手的沉穩，而西區焦點戰金塊則在 Jokić 與 Murray 的雙核領軍下，硬是扛住了灰狼雙塔的衝擊。</p>
 <h2>值得注意的看點</h2>
 <ul>
-<li>🏀 <strong>騎士 vs. 暴龍</strong>：季後賽首輪對決開打，開賽階段暴龍展現侵略性，攻守節奏取得先機，騎士能否在主場穩住陣腳將是看點。</li>
-<li>⛰️ <strong>金塊 vs. 灰狼</strong>：西區重量級碰撞，延續兩隊近年多次交手的恩怨情仇，內線與外線的對決備受期待。</li>
-<li>🗽 <strong>尼克 vs. 老鷹</strong>：東區季後賽系列戰，主場作戰的尼克將迎接老鷹年輕攻擊火力的挑戰。</li>
-<li>⭐ <strong>湖人 vs. 火箭</strong>：壓軸大戲！兩支西區勁旅的對決無疑是本日焦點，勝負可能牽動系列賽走向與西區排名態勢。</li>
+<li>🏆 <strong>騎士首戰大勝 13 分</strong>：騎士全場三分球 32 投 16 中、命中率高達 50%，替補更貢獻 40 分，深度與射程全面壓制暴龍，系列賽搶下寶貴的 1–0。</li>
+<li>⚡ <strong>尼克斯主場點燃麥迪遜</strong>：尼克斯全場領先時間長達 43 分 34 秒，最大領先一度達 19 分，Brunson 與 KAT 的雙核心配置對上老鷹顯得游刃有餘。</li>
+<li>🛡️ <strong>金塊頂住灰狼反撲</strong>：Edwards 率隊在上半場一度領先 12 分，但金塊靠著罰球線上 33 罰 30 中 (90.9%) 的致命準度拿回主控權，最終 11 分收下首戰。</li>
+<li>👀 <strong>湖人 vs 火箭正在進行中</strong>：半場前湖人以 44–36 暫時領先，是今日唯一的西岸夜戰，結果將牽動西區下半區戰局。</li>
+<li>📈 <strong>地主全勝的首日</strong>：三場已結束的比賽皆由主場球隊拿下，主場優勢在季後賽首輪再度顯現其價值。</li>
 </ul>
 <h2>關鍵數據</h2>
 <ul>
-<li>目前僅騎士 vs. 暴龍一戰開打，比賽仍處於首節初段（Q1 8:20），尚無具代表性的個人數據產出。</li>
-<li>其餘三場比賽尚未開球，待賽後補充球員亮眼表現。📊</li>
+<li><strong>Nikola Jokić（DEN）</strong>：25 分 13 籃板 11 助攻，季後賽首戰就送上大三元，19 投 11 中效率極佳。🃏</li>
+<li><strong>Jamal Murray（DEN）</strong>：30 分 7 助攻，最狂的是 <strong>罰球 16 罰全中</strong>，展現季後賽專屬的冷血殺手本色。</li>
+<li><strong>Donovan Mitchell（CLE）</strong>：32 分 4 助攻 2 抄截，三分球 7 投 4 中，包辦全場最高分。</li>
+<li><strong>Jalen Brunson（NYK）</strong>：28 分 7 助攻 5 籃板，搭配 <strong>Karl-Anthony Towns 25 分 8 籃板 3 阻攻、罰球 10 罰全中</strong>，雙核聯手撂倒老鷹。</li>
+<li><strong>Max Strus（CLE）</strong>：替補登場 24 分鐘狂轟 <strong>24 分 (10 投 8 中、三分 6 投 4 中)</strong>，是騎士替補火力的關鍵推手。</li>
+<li><strong>Josh Hart（NYK）</strong>：11 分 <strong>14 籃板</strong> 5 助攻 3 抄截，繳出典型的全能藍領表現。</li>
+<li><strong>Dyson Daniels（ATL）</strong>：4 分 9 籃板 <strong>11 助攻</strong> 3 抄截，雖然敗戰仍展現組織與防守雙能側翼的全面性。</li>
+<li><strong>Bruce Brown（DEN）</strong>：替補出賽 21 分鐘貢獻 <strong>5 次抄截</strong>，是金塊守下反撲的 X-factor。</li>
 </ul>
 <h2>特殊事件</h2>
-<p>暫無特別事件。大多數比賽尚未開打，目前無逆轉、絕殺、延長賽或里程碑紀錄可供報導。</p>
+<ul>
+<li>🎯 <strong>Jokić 季後賽大三元開胡</strong>：第三座季後賽首輪揭幕戰級別的全能演出，再次展示他作為現役最強中鋒的統治力。</li>
+<li>🎯 <strong>Murray 罰球 16/16</strong>：單場罰球全數命中且出手達 16 次，在季後賽舞台尤其罕見，也凸顯灰狼此役防守犯規管控失當。</li>
+<li>其餘比賽皆為正常節奏收尾，暫無逆轉、延長或絕殺等戲劇性場面。</li>
+</ul>
 <h2>重要人事異動</h2>
 <p>本日資料未包含人事異動資訊。</p>
     </article>
   </div>
+
+  <footer class="site-footer">
+    <p>
+      <i class="ph ph-basketball"></i>
+      Powered by <a href="https://www.anthropic.com" target="_blank" rel="noopener">Claude Opus 4.7</a>
+      &nbsp;+&nbsp;
+      <a href="https://github.com/swar/nba_api" target="_blank" rel="noopener">nba_api</a>
+      &nbsp;·&nbsp; Auto-generated daily report
+    </p>
+  </footer>
 
   <button id="back-to-top" aria-label="回到頂部">↑</button>
 
@@ -377,6 +484,28 @@
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
     fadeEls.forEach(el => sectionObserver.observe(el));
+
+    // Section heading icon injection (D)
+    const sectionIconMap = [
+      ['戰況', 'ph-basketball'], ['總覽', 'ph-basketball'],
+      ['看點', 'ph-fire'],
+      ['數據', 'ph-chart-bar'],
+      ['事件', 'ph-lightning'],
+      ['人事', 'ph-users'],
+    ];
+    const hasEmoji = str => /\p{Emoji_Presentation}/u.test(str);
+    document.querySelectorAll('.content h2').forEach(h2 => {
+      if (hasEmoji(h2.textContent)) return;
+      for (const [kw, cls] of sectionIconMap) {
+        if (h2.textContent.includes(kw)) {
+          const icon = document.createElement('i');
+          icon.className = `ph ${cls}`;
+          icon.style.cssText = 'margin-right:0.4rem;vertical-align:middle;color:var(--accent-light);';
+          h2.prepend(icon);
+          break;
+        }
+      }
+    });
 
     // Link click fade-out transition
     document.querySelectorAll('.sidebar a').forEach(link => {
