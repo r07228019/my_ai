@@ -468,6 +468,17 @@ def _render_page(
       border-bottom-color: #c7d2fe;
       text-decoration: none;
     }}
+    .team-link {{
+      color: #fbbf24;
+      border-bottom: 1px dotted rgba(251, 191, 36, 0.45);
+      text-decoration: none;
+      transition: color 0.2s, border-color 0.2s;
+    }}
+    .team-link:hover {{
+      color: #fde68a;
+      border-bottom-color: #fde68a;
+      text-decoration: none;
+    }}
     .content ul, .content ol {{ padding-left: 1.5rem; margin-bottom: 0.9rem; color: #adbac7; }}
     .content li {{ margin-bottom: 0.25rem; line-height: 1.75; }}
     .content hr {{ border: none; border-top: 1px solid var(--border); margin: 2rem 0; }}
@@ -714,6 +725,48 @@ def _linkify_players(html: str, player_map: dict) -> str:
     )
 
 
+def _build_team_url_map() -> dict[str, tuple[int, str]]:
+    """Return {abbreviation: (team_id, slug)} and {full_name: (team_id, slug)} for all NBA teams."""
+    from nba_api.stats.static import teams as nba_teams
+
+    result = {}
+    for t in nba_teams.get_teams():
+        slug = t["nickname"].lower()
+        tid = t["id"]
+        result[t["abbreviation"]] = (tid, slug)
+        result[t["full_name"]] = (tid, slug)
+    return result
+
+
+def _linkify_teams(html: str, team_map: dict) -> str:
+    """Replace team abbreviations and full English team names in HTML text nodes with NBA.com links."""
+    import re as _re
+
+    tricodes = {k: v for k, v in team_map.items() if k.isupper() and len(k) <= 3}
+    full_names = {k: v for k, v in team_map.items() if not (k.isupper() and len(k) <= 3)}
+
+    relevant_tricodes = [k for k in tricodes if k in html]
+    relevant_names = sorted([k for k in full_names if k in html], key=len, reverse=True)
+
+    if not relevant_tricodes and not relevant_names:
+        return html
+
+    patterns = [_re.escape(n) for n in relevant_names] + [r"\b" + _re.escape(t) + r"\b" for t in relevant_tricodes]
+    combined = _re.compile("(" + "|".join(patterns) + ")")
+    lookup = {**{n: full_names[n] for n in relevant_names}, **{t: tricodes[t] for t in relevant_tricodes}}
+
+    def replacer(m: _re.Match) -> str:
+        name = m.group(0)
+        tid, slug = lookup[name]
+        return f'<a href="https://www.nba.com/team/{tid}/{slug}" target="_blank" rel="noopener" class="team-link">{name}</a>'
+
+    parts = _re.split(r"(<[^>]+>)", html)
+    return "".join(
+        part if part.startswith("<") else combined.sub(replacer, part)
+        for part in parts
+    )
+
+
 def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
     """Generate static HTML site from the last keep_n markdown reports.
 
@@ -729,13 +782,17 @@ def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
     docs_reports_dir.mkdir(parents=True, exist_ok=True)
 
     player_map = _build_player_url_map()
+    team_map = _build_team_url_map()
 
     reports = [
         {
             "date": p.stem.replace("nba_daily_report_", ""),
-            "body": _linkify_players(
-                md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"]),
-                player_map,
+            "body": _linkify_teams(
+                _linkify_players(
+                    md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"]),
+                    player_map,
+                ),
+                team_map,
             ),
             "filename": f"{p.stem}.html",
         }
