@@ -457,6 +457,17 @@ def _render_page(
     .content strong {{ font-weight: 600; color: #cdd9e5; }}
     .content a {{ color: var(--accent-light); text-decoration: none; }}
     .content a:hover {{ text-decoration: underline; }}
+    .player-link {{
+      color: var(--accent-light);
+      border-bottom: 1px dotted rgba(129, 140, 248, 0.5);
+      text-decoration: none;
+      transition: color 0.2s, border-color 0.2s;
+    }}
+    .player-link:hover {{
+      color: #c7d2fe;
+      border-bottom-color: #c7d2fe;
+      text-decoration: none;
+    }}
     .content ul, .content ol {{ padding-left: 1.5rem; margin-bottom: 0.9rem; color: #adbac7; }}
     .content li {{ margin-bottom: 0.25rem; line-height: 1.75; }}
     .content hr {{ border: none; border-top: 1px solid var(--border); margin: 2rem 0; }}
@@ -659,6 +670,50 @@ def _render_page(
 </html>"""
 
 
+def _build_player_url_map() -> dict[str, tuple[int, str]]:
+    """Return {full_name: (player_id, slug)} for all active NBA players (no network call)."""
+    import unicodedata
+    import re as _re
+    from nba_api.stats.static import players as nba_players
+
+    def to_slug(name: str) -> str:
+        name = unicodedata.normalize("NFKD", name)
+        name = "".join(c for c in name if not unicodedata.combining(c))
+        name = name.lower().replace("'", "").replace("`", "")
+        name = _re.sub(r"\s+", "-", name.strip())
+        name = _re.sub(r"[^a-z0-9-]", "", name)
+        return name
+
+    return {
+        p["full_name"]: (p["id"], to_slug(p["full_name"]))
+        for p in nba_players.get_players()
+        if p.get("is_active")
+    }
+
+
+def _linkify_players(html: str, player_map: dict) -> str:
+    """Replace full English player names in HTML text nodes with NBA.com hyperlinks."""
+    import re as _re
+
+    sorted_names = sorted(player_map.keys(), key=len, reverse=True)
+    relevant = [n for n in sorted_names if n in html]
+    if not relevant:
+        return html
+
+    pattern = _re.compile("(" + "|".join(_re.escape(n) for n in relevant) + ")")
+
+    def replacer(m: _re.Match) -> str:
+        name = m.group(0)
+        pid, slug = player_map[name]
+        return f'<a href="https://www.nba.com/player/{pid}/{slug}" target="_blank" rel="noopener" class="player-link">{name}</a>'
+
+    parts = _re.split(r"(<[^>]+>)", html)
+    return "".join(
+        part if part.startswith("<") else pattern.sub(replacer, part)
+        for part in parts
+    )
+
+
 def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
     """Generate static HTML site from the last keep_n markdown reports.
 
@@ -673,10 +728,15 @@ def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
     docs_reports_dir = docs_dir / "reports"
     docs_reports_dir.mkdir(parents=True, exist_ok=True)
 
+    player_map = _build_player_url_map()
+
     reports = [
         {
             "date": p.stem.replace("nba_daily_report_", ""),
-            "body": md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"]),
+            "body": _linkify_players(
+                md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"]),
+                player_map,
+            ),
             "filename": f"{p.stem}.html",
         }
         for p in md_files
