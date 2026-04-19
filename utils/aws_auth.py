@@ -32,7 +32,7 @@ def get_mfa_credentials(mfa_serial: str, token_code: str, region: str, profile: 
     os.environ["AWS_ACCESS_KEY_ID"] = creds["AccessKeyId"]
     os.environ["AWS_SECRET_ACCESS_KEY"] = creds["SecretAccessKey"]
     os.environ["AWS_SESSION_TOKEN"] = creds["SessionToken"]
-    logger.info("MFA 臨時憑證取得成功，有效至 %s", creds["Expiration"])
+    logger.info("MFA temporary credentials acquired successfully, valid until %s", creds["Expiration"])
 
 
 def setup_aws_session(
@@ -42,12 +42,12 @@ def setup_aws_session(
 ) -> str:
     """Read AWS profile config, handle MFA if needed, return resolved region.
 
-    根據 MFA serial 的來源，決定如何取得 MFA code：
+    Determines how to obtain the MFA code based on where the MFA serial is configured:
 
-    - 環境變數 ``AWS_MFA_SERIAL``：以 TOTP 自動產生 MFA code，需搭配 ``AWS_MFA_SEED``。
-    - profile config 的 ``mfa_serial``：互動式要求使用者輸入 6 碼驗證碼。
+    - Environment variable ``AWS_MFA_SERIAL``: auto-generate MFA code via TOTP; requires ``AWS_MFA_SEED``.
+    - Profile config ``mfa_serial``: interactively prompt the user for a 6-digit code.
 
-    兩組 MFA serial 可以不同；env 優先，兩者皆未設定則跳過 MFA。
+    The two MFA serials may differ; env takes precedence. If neither is set, MFA is skipped.
     """
     session = botocore.session.Session(profile=profile)
     profile_cfg = session.get_scoped_config()
@@ -57,15 +57,15 @@ def setup_aws_session(
         mfa_serial = env_serial
         mfa_seed = os.getenv("AWS_MFA_SEED")
         if not mfa_seed:
-            raise ValueError("環境變數缺少 AWS_MFA_SEED，請確認")
-        print("[0/4] 自動產生 MFA code 並取得臨時憑證 ...")
+            raise ValueError("AWS_MFA_SEED environment variable is missing")
+        print("[0/4] Auto-generating MFA code and obtaining temporary credentials ...")
         token_code = generate_mfa_code(mfa_seed)
     elif profile_serial := profile_cfg.get("mfa_serial"):
         mfa_serial = profile_serial
-        token_code = input("請輸入 MFA 驗證碼 (6 碼): ").strip()
+        token_code = input("Enter MFA code (6 digits): ").strip()
         if not token_code:
-            raise ValueError("MFA 驗證碼不可為空")
-        print("[0/4] 手動輸入 MFA，取得臨時憑證 ...")
+            raise ValueError("MFA code cannot be empty")
+        print("[0/4] Manual MFA input, obtaining temporary credentials ...")
     else:
         return aws_region
 

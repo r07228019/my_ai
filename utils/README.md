@@ -1,115 +1,115 @@
 # utils/
 
-專案共用工具模組，目前僅包含 AWS 認證相關邏輯。
+Shared utility modules for the project. Currently contains only AWS authentication logic.
 
-## 檔案結構
+## File structure
 
 ```
 utils/
 ├── __init__.py
-├── aws_auth.py        # AWS MFA 認證工具
+├── aws_auth.py        # AWS MFA authentication utility
 └── README.md
 ```
 
-## 背景：組織 SCP 政策
+## Background: organizational SCP policy
 
-本組織於 AWS 帳號層級套用 SCP（Service Control Policy），**要求所有 IAM 使用者的操作都必須通過 MFA 驗證**，否則 STS 以外的呼叫會直接被拒絕。因此任何需要存取 AWS 資源的程式（例如呼叫 Bedrock、S3、SNS ...）都必須先完成以下流程：
+This organization applies an SCP (Service Control Policy) at the AWS account level that **requires all IAM user operations to pass MFA verification**; otherwise, calls other than STS are rejected outright. Any program that needs to access AWS resources (e.g., calling Bedrock, S3, SNS, ...) must therefore first complete the following flow:
 
-1. 使用長期 access key 呼叫 `sts:GetSessionToken`，並附上當下的 MFA 6 碼驗證碼。
-2. 拿到的臨時憑證（access key / secret / session token）才擁有完整操作權限。
-3. 後續所有 AWS client 以此臨時憑證為準。
+1. Use a long-lived access key to call `sts:GetSessionToken`, along with the current 6-digit MFA code.
+2. The returned temporary credentials (access key / secret / session token) have full operation privileges.
+3. All subsequent AWS clients rely on these temporary credentials.
 
-`aws_auth.py` 封裝的就是第 1、2 步，讓呼叫端不必重複實作。
+`aws_auth.py` encapsulates steps 1 and 2 so callers don't have to reimplement them.
 
-## 為什麼要同時支援「自動產生」與「手動輸入」兩種 MFA 流程？
+## Why support both "auto-generate" and "manual input" MFA flows?
 
-本組織的 IAM user 在某些情境下會擁有**兩個不同的 MFA 裝置**：
+IAM users in this organization may own **two different MFA devices** for different scenarios:
 
-| MFA 裝置 | 用途 | 取碼方式 |
+| MFA device | Purpose | How to obtain code |
 |---|---|---|
-| 日常自動化用（低風險操作） | 排程任務、自動化腳本 | 以 base32 seed 透過 TOTP 自動產生 |
-| 高權限操作用（需人為把關） | 建立資源、修改設定 | 需使用者實際輸入 6 碼 |
+| Daily automation (low-risk operations) | Scheduled tasks, automation scripts | Auto-generated via TOTP from a base32 seed |
+| High-privilege operations (requires human gatekeeping) | Resource creation, configuration changes | Requires the user to enter 6 digits manually |
 
-為了兼顧兩種情境，`setup_aws_session()` 依 **MFA serial ARN 的設定來源** 決定走哪條路徑：
+To accommodate both scenarios, `setup_aws_session()` chooses the path based on **where the MFA serial ARN is configured**:
 
-| MFA serial 來源 | 行為 | 適用情境 |
+| MFA serial source | Behavior | Applicable scenario |
 |---|---|---|
-| 環境變數 `AWS_MFA_SERIAL` | 自動以 TOTP 產生 MFA code（需 `AWS_MFA_SEED`） | 日常自動化 |
-| `~/.aws/config` 的 `mfa_serial` | 互動式要求輸入 6 碼 | 需人為確認的操作 |
-| 兩者皆未設定 | 跳過 MFA，走 AWS 預設 credential chain | 已有既存 session 或不需 MFA 的環境 |
+| Environment variable `AWS_MFA_SERIAL` | Auto-generate MFA code via TOTP (requires `AWS_MFA_SEED`) | Daily automation |
+| `mfa_serial` in `~/.aws/config` | Interactively prompt for 6-digit code | Operations requiring human confirmation |
+| Neither is set | Skip MFA, use AWS default credential chain | Environments with an existing session or that don't need MFA |
 
-**優先順序**：環境變數 > profile config。env 有設定時一律走自動產生；若 env 有 serial 但缺 seed 則直接報錯，不會 fallback 為互動輸入。
+**Precedence:** environment variable > profile config. When the env var is set, the auto-generate path is always used; if env has the serial but is missing the seed, an error is raised — there is no fallback to interactive input.
 
-## 模組 API：`aws_auth.py`
+## Module API: `aws_auth.py`
 
 ### `setup_aws_session(profile, region_override, default_region) -> str`
 
-主要入口，處理整個 MFA 認證流程並回傳最終使用的 AWS region。
+Main entry point. Handles the entire MFA authentication flow and returns the final AWS region to use.
 
-**參數**
-- `profile` (`str | None`)：AWS profile 名稱（對應 `~/.aws/credentials` / `~/.aws/config`）。
-- `region_override` (`str | None`)：若指定則覆蓋 profile 中的 region。
-- `default_region` (`str`)：兩者皆未設定時的 fallback，預設 `us-east-1`。
+**Parameters**
+- `profile` (`str | None`): AWS profile name (matching `~/.aws/credentials` / `~/.aws/config`).
+- `region_override` (`str | None`): If specified, overrides the region in the profile.
+- `default_region` (`str`): Fallback when neither of the above is set. Defaults to `us-east-1`.
 
-**副作用**
-- 成功時會將臨時憑證寫入當前 process 的環境變數：
+**Side effects**
+- On success, writes temporary credentials to the current process's environment variables:
   - `AWS_ACCESS_KEY_ID`
   - `AWS_SECRET_ACCESS_KEY`
   - `AWS_SESSION_TOKEN`
-- 只影響當前 Python process（不會污染 shell rc 檔）；process 結束即消失。
+- Only affects the current Python process (does not pollute shell rc files); credentials disappear when the process exits.
 
-**例外**
-- `ValueError`：MFA code 為空、或 env 設了 serial 但缺 seed。
+**Exceptions**
+- `ValueError`: MFA code is empty, or env has the serial set but is missing the seed.
 
 ### `generate_mfa_code(string_seed) -> str`
 
-以 base32 seed 產生當下時間的 6 碼 TOTP，供自動流程使用。
+Generates a 6-digit TOTP for the current time from a base32 seed, used by the automated flow.
 
 ### `get_mfa_credentials(mfa_serial, token_code, region, profile) -> None`
 
-實際呼叫 STS `GetSessionToken` 並將臨時憑證寫入環境變數。一般情境下不需直接呼叫，由 `setup_aws_session()` 內部使用。
+Actually calls STS `GetSessionToken` and writes temporary credentials to environment variables. Not typically called directly — used internally by `setup_aws_session()`.
 
-## 環境變數
+## Environment variables
 
-| 變數 | 用途 | 必要性 |
+| Variable | Purpose | Required |
 |---|---|---|
-| `AWS_MFA_SERIAL` | 自動流程的 MFA 裝置 ARN | 啟用自動流程時必填 |
-| `AWS_MFA_SEED` | 自動流程的 base32 TOTP seed | 搭配 `AWS_MFA_SERIAL` 必填 |
+| `AWS_MFA_SERIAL` | MFA device ARN for the automated flow | Required when enabling the automated flow |
+| `AWS_MFA_SEED` | base32 TOTP seed for the automated flow | Required together with `AWS_MFA_SERIAL` |
 
-建議寫在 `~/.zshrc`（macOS 預設 shell 是 zsh，`~/.bashrc` 不會被載入）：
+Recommended to put these in `~/.zshrc` (macOS's default shell is zsh; `~/.bashrc` is not loaded):
 
 ```bash
 export AWS_MFA_SERIAL=arn:aws:iam::123456789012:mfa/YOUR_AUTO_DEVICE
 export AWS_MFA_SEED=YOUR_BASE32_SEED
 ```
 
-> ⚠️ `AWS_MFA_SEED` 等同於實體 MFA 裝置本身，請確保 rc 檔權限為 `600`，並務必避免 commit 到 git。
+> ⚠️ `AWS_MFA_SEED` is equivalent to the physical MFA device itself. Make sure the rc file permissions are `600`, and never commit it to git.
 
-## 呼叫端範例
+## Caller example
 
 ```python
 from utils.aws_auth import setup_aws_session
 
-# 走 profile config 中的 default region
+# Use the default region from the profile config
 aws_region = setup_aws_session(profile="cathay-dt-lab")
 
-# 覆蓋 region
+# Override region
 aws_region = setup_aws_session(
     profile="cathay-dt-lab",
     region_override="us-east-1",
     default_region="ap-southeast-1",
 )
 
-# 之後下游建立 client，憑證會從環境變數自動讀取
+# Downstream clients will read credentials from env vars automatically
 import boto3
 s3 = boto3.client("s3", region_name=aws_region)
 ```
 
-實際使用範例可參考 [test/nba_daily_report/main.py](../test/nba_daily_report/main.py)。
+For a real usage example, see [test/nba_daily_report/main.py](../test/nba_daily_report/main.py).
 
-## 相依套件
+## Dependencies
 
-- `boto3`、`botocore`：AWS SDK。
-- `pyotp`：TOTP 產生（僅自動流程需要）。
+- `boto3`, `botocore`: AWS SDK.
+- `pyotp`: TOTP generation (only needed for the automated flow).
 
-請確保專案根目錄的 [requirements.txt](../requirements.txt) 已安裝上述套件。
+Make sure the above packages are installed via [requirements.txt](../requirements.txt) at the project root.
