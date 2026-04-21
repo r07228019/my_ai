@@ -15,7 +15,12 @@
       "Bash(git push *)",
       "Bash(python -c ' *)",
       "Bash(python3 -c ' *)",
-      "Bash(python3 -m test.nba_daily_report.html_gen)"
+      "Bash(python3 -m test.nba_daily_report.html_gen)",
+      "Bash(/Users/david/david_workspace/my_ai/my_ai_venv/bin/python -c \"import anthropic, yaml, boto3, pyotp, markdown; print\\('base deps OK'\\)\")",
+      "Bash(/Users/david/david_workspace/my_ai/my_ai_venv/bin/python -c \"import requests, bs4; print\\('new deps OK'\\)\")",
+      "Bash(/Users/david/david_workspace/my_ai/my_ai_venv/bin/pip install *)",
+      "Bash(/Users/david/david_workspace/my_ai/my_ai_venv/bin/python *)",
+      "Bash(env)"
     ]
   }
 }
