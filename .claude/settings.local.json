@@ -20,7 +20,10 @@
       "Bash(/Users/david/david_workspace/my_ai/my_ai_venv/bin/python -c \"import requests, bs4; print\\('new deps OK'\\)\")",
       "Bash(/Users/david/david_workspace/my_ai/my_ai_venv/bin/pip install *)",
       "Bash(/Users/david/david_workspace/my_ai/my_ai_venv/bin/python *)",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(gh api *)",
+      "Bash(python *)",
+      "Bash(pip install *)"
     ]
   }
 }
