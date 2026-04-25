@@ -25,7 +25,12 @@
       "Bash(python *)",
       "Bash(pip install *)",
       "Bash(curl -s \"https://unpkg.com/@phosphor-icons/core@2.1.1/assets/fill/basketball-fill.svg\")",
-      "Bash(python3)"
+      "Bash(python3)",
+      "WebFetch(domain:tw.stock.yahoo.com)",
+      "WebFetch(domain:www.moneydj.com)",
+      "WebFetch(domain:www.google.com)",
+      "WebFetch(domain:www.yuantaetfs.com)",
+      "WebFetch(domain:goodinfo.tw)"
     ]
   }
 }
