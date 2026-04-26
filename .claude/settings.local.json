@@ -30,7 +30,17 @@
       "WebFetch(domain:www.moneydj.com)",
       "WebFetch(domain:www.google.com)",
       "WebFetch(domain:www.yuantaetfs.com)",
-      "WebFetch(domain:goodinfo.tw)"
+      "WebFetch(domain:goodinfo.tw)",
+      "WebFetch(domain:zh.wikipedia.org)",
+      "WebFetch(domain:www.bing.com)",
+      "WebFetch(domain:duckduckgo.com)",
+      "WebFetch(domain:search.brave.com)",
+      "Read(//Users/david/.oh-my-zsh/custom/**)",
+      "Read(//Users/david/.oh-my-zsh/**)",
+      "Bash(brew list *)",
+      "Read(//opt/homebrew/share/**)",
+      "Read(//usr/local/share/**)",
+      "Read(//Users/david/**)"
     ]
   }
 }
