@@ -7,7 +7,7 @@ import logging
 import signal
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -15,7 +15,7 @@ import anthropic
 import yaml
 
 from utils.aws_auth import setup_aws_session
-from .nba_data import build_games_payload, build_scores_summary, fetch_todays_games
+from .nba_data import build_games_payload, build_scores_summary, fetch_games_by_et_date
 from .html_gen import generate_website
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
@@ -40,13 +40,14 @@ def load_system_prompt(config: dict) -> str:
 
 
 def summarize_with_claude(
-    games_payload: list[dict], report_date: str, aws_region: str, config: dict, system_prompt: str,
+    games_payload: list[dict], report_date: str, et_date: str, aws_region: str, config: dict, system_prompt: str,
 ) -> str:
     client = anthropic.AnthropicBedrock(aws_region=aws_region)
     bedrock_model = config["aws"]["bedrock_model"]
     max_tokens = config["claude"]["max_tokens"]
     user_prompt = (
-        f"以下是 {report_date} (美東時間) 的 NBA 比賽資料，請依系統指示撰寫繁體中文每日戰報。\n\n"
+        f"以下是 {et_date} (美東時間) / {report_date} (台北時間) 的 NBA 比賽資料，"
+        f"請依系統指示撰寫繁體中文每日戰報，標題日期請使用「{report_date}」(台北時間)。\n\n"
         f"```json\n{json.dumps(games_payload, ensure_ascii=False, indent=2)}\n```"
     )
     with client.messages.stream(
@@ -89,20 +90,23 @@ def main() -> int:
 
         aws_region = setup_aws_session(profile, args.region, default_region)
 
-        et_now = datetime.now(ZoneInfo("US/Eastern"))
-        report_date = et_now.strftime("%Y-%m-%d")
+        tpe_now = datetime.now(ZoneInfo("Asia/Taipei"))
+        report_date = tpe_now.strftime("%Y-%m-%d")
+        et_date = (tpe_now - timedelta(days=1)).strftime("%Y-%m-%d")
+        _d = datetime.strptime(report_date, "%Y-%m-%d")
+        report_date_zh = f"{_d.year} 年 {_d.month} 月 {_d.day} 日"
 
-        print(f"[1/4] 擷取 {report_date} (ET) 的 NBA 比賽資料 ...")
-        games = fetch_todays_games()
+        print(f"[1/4] 擷取 {et_date} (ET) / {report_date} (台北) 的 NBA 比賽資料 ...")
+        games = fetch_games_by_et_date(et_date)
         print(f"      找到 {len(games)} 場比賽")
 
         payload = build_games_payload(games)
 
         print(f"[2/4] 呼叫 Claude ({bedrock_model}) 彙整報告 ...")
         if not payload:
-            report = f"# 🏀 NBA 每日戰報 — {report_date}\n\n本日美東時間暫無 NBA 賽事。\n"
+            report = f"# 🏀 NBA 每日戰報 — {report_date_zh}\n\n本日台北時間對應之美東賽程暫無 NBA 賽事。\n"
         else:
-            summary = summarize_with_claude(payload, report_date, aws_region, config, system_prompt)
+            summary = summarize_with_claude(payload, report_date_zh, et_date, aws_region, config, system_prompt)
             report = f"{summary}\n"
 
         output_dir.mkdir(exist_ok=True)

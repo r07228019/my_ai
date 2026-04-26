@@ -6,10 +6,10 @@
 
 執行後會依序完成：
 
-1. **抓資料**：呼叫 [`nba_api`](https://github.com/swar/nba_api) 的 Live Scoreboard 取得「美東時間當日」的所有比賽；對已完賽的場次再呼叫 Boxscore 取得球員個人數據（得分、籃板、助攻、抄截、阻攻、失誤、投籃命中率、正負值等）。
-2. **彙整報告**：把結構化資料丟給 Claude Opus 4.7，由模型依照固定格式撰寫戰報。
-3. **寫檔**：輸出到 `report/nba_daily_report_YYYY-MM-DD.md`（檔名中的日期為美東時間），`report/` 目錄會自動建立。同時將已完賽場次的「最終比分 + 兩隊得分王」摘要存為 `report/scores_YYYY-MM-DD.json`，供靜態網頁渲染「各場比分」區塊使用。
-4. **更新靜態網頁**：掃描最近 10 份報告，生成 `docs/index.html` 與 `docs/reports/*.html`，push 後由 GitHub Pages 自動部署。若對應日期有 `scores_*.json`，會在 H1 標題下方額外渲染「各場比分」卡片（含隊徽、比分、兩隊得分王 PTS/REB/AST）。
+1. **抓資料**：以執行當下的**台北時間**取得當日日期，反推前一日的**美東日期** (Taipei − 1 日)，呼叫 [`nba_api`](https://github.com/swar/nba_api) 的 `ScoreboardV3` 抓該 ET 日期的所有比賽；對已完賽的場次再呼叫 Boxscore 取得球員個人數據（得分、籃板、助攻、抄截、阻攻、失誤、投籃命中率、正負值等）。
+2. **彙整報告**：把結構化資料丟給 Claude Opus 4.7，由模型依照固定格式撰寫戰報；標題日期一律使用**台北時間**當日。
+3. **寫檔**：輸出到 `report/nba_daily_report_YYYY-MM-DD.md`（檔名中的日期為**台北時間**），`report/` 目錄會自動建立。同時將已完賽場次的「最終比分 + 兩隊得分王」摘要存為 `report/scores_YYYY-MM-DD.json`（台北日期），供靜態網頁渲染「各場比分」區塊使用。
+4. **更新靜態網頁**：掃描最近 10 份報告，生成 `docs/index.html` 與 `docs/reports/*.html`，push 後由 GitHub Pages 自動部署。檔名、H1 日期、側邊欄皆使用台北日期；H1 內的日期連結則指向 NBA.com 對應的美東日期 (`nba.com/games?date=ET_DATE`)。若對應日期有 `scores_*.json`，會在 H1 標題下方額外渲染「各場比分」卡片（含隊徽、比分、兩隊得分王 PTS/REB/AST）。
 
 報告固定包含五個段落：
 
@@ -31,8 +31,8 @@ flowchart TD
     E -->|Yes| F[輸入 MFA 驗證碼]
     F --> G[STS GetSessionToken<br>取得臨時憑證]
     G --> H
-    E -->|No| H[取得美東時間當日日期]
-    H --> I[NBA API: Scoreboard<br>取得當日比賽列表]
+    E -->|No| H[取得台北時間當日日期<br>反推 ET 日期 = 台北 − 1 日]
+    H --> I[NBA API: ScoreboardV3<br>按 ET 日期取比賽列表]
     I --> J{有比賽?}
     J -->|No| K[產生「本日無賽事」報告]
     J -->|Yes| L[遍歷每場比賽]
@@ -148,11 +148,12 @@ python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 [*] 使用 AWS profile: cathay-dt-lab
 [0/4] 自動產生 MFA code 並取得臨時憑證 ...
       MFA 臨時憑證取得成功，有效至 2026-04-18 12:00:00+00:00
-[1/4] 擷取 2026-04-18 (ET) 的 NBA 比賽資料 ...
+[1/4] 擷取 2026-04-18 (ET) / 2026-04-19 (台北) 的 NBA 比賽資料 ...
       找到 8 場比賽
 [2/4] 呼叫 Claude (us.anthropic.claude-opus-4-7) 彙整報告 ...
       Token 用量：input=12345, output=2048, total=14393
-[3/4] 已寫入：.../report/nba_daily_report_2026-04-18.md
+[3/4] 已寫入：.../report/nba_daily_report_2026-04-19.md
+      已寫入比分摘要：.../report/scores_2026-04-19.json
 [4/4] 更新靜態網頁 ...
       已產生 5 份報告至 .../docs
 [*] 總執行時間：45.23 秒
@@ -167,8 +168,8 @@ python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 
 ## 設計備註
 
-- **時區**：NBA 賽程以美東時間 (US/Eastern) 為基準，因此「當日」以 ET 為準，而非台灣時區。
-- **資料來源**：只使用官方 Live 端點；進行中或未開賽的比賽僅帶出比分與隊伍資訊，不拉 box score。
+- **時區策略**：網站**對外呈現一律使用台北時間** (Asia/Taipei)，包含檔名 (`nba_daily_report_YYYY-MM-DD.md`)、報告 H1、側邊欄、hero banner。內部抓資料時，以執行當下的台北日期往回減一天做為 ET 查詢日 (`ScoreboardV3(game_date=ET_DATE)`)，避免跨時區日期混淆造成重複。H1 日期連結指向的 `nba.com/games?date=` URL 仍使用 ET 日期（NBA 官方即以 ET 索引賽程）。
+- **資料來源**：抓特定 ET 日期用 `nba_api.stats.endpoints.scoreboardv3`（即使非當日亦可查），boxscore 仍走 live 端點。進行中或未開賽的比賽僅帶出比分與隊伍資訊，不拉 box score。
 - **模型選擇**：透過 AWS Bedrock 使用 `us.anthropic.claude-opus-4-7`，呼叫時採用 streaming 以避免長輸出 timeout。執行結束時會顯示 input/output token 用量，方便追蹤費用。
 - **預設 profile**：`config.yaml` 的 `default_profile` 讓使用者不需每次帶 `--profile` 參數，`--profile` 仍可覆蓋。
 - **MFA 支援**：透過 `utils/aws_auth.setup_aws_session()` 共用模組處理。MFA serial 來源決定取碼方式：環境變數 `AWS_MFA_SERIAL` → 以 `pyotp` 從 `AWS_MFA_SEED` 自動產生 MFA code；profile config 的 `mfa_serial` → 互動式詢問。兩者皆可，env 優先；最後透過 STS 取得臨時憑證。
@@ -180,5 +181,5 @@ python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 ## 已知限制
 
 - `nba_api` 走的是非官方封裝，若 NBA 端點或回傳格式變動，可能需要更新套件版本。
-- 若在賽事進行中執行，尚未完賽的比賽不會有球員數據；建議在美東時間深夜 / 隔日凌晨執行以取得完整戰報。
+- 若在賽事進行中執行（例如台北時間上午，美東比賽仍在進行），尚未完賽的比賽不會有球員數據；建議在台北時間中午後執行（此時絕大多數美東前日賽事已結束），以取得完整戰報。
 - 報告內容由 LLM 生成，仍可能有誤讀或遺漏，請作為參考而非權威資料。

@@ -41,7 +41,8 @@
       "Read(//opt/homebrew/share/**)",
       "Read(//usr/local/share/**)",
       "Read(//Users/david/**)",
-      "Bash(curl -sI \"https://cdn.nba.com/logos/nba/1610612753/primary/L/logo.svg\")"
+      "Bash(curl -sI \"https://cdn.nba.com/logos/nba/1610612753/primary/L/logo.svg\")",
+      "Bash(git -C /Users/david/david_workspace/my_ai log --oneline -10 -- test/nba_daily_report/report/)"
     ]
   }
 }

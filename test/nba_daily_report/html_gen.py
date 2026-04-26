@@ -303,9 +303,17 @@ def _linkify_teams(html: str, team_map: dict) -> str:
     )
 
 
-def _linkify_report_date(html: str, date_str: str) -> str:
-    """Wrap the Chinese date in the H1 title with a link to nba.com/games?date=YYYY-MM-DD."""
-    url = f"https://www.nba.com/games?date={date_str}"
+def _linkify_report_date(html: str, taipei_date_str: str) -> str:
+    """Wrap the Chinese date in the H1 title with a link to nba.com/games?date=YYYY-MM-DD.
+
+    NBA.com uses ET date, which is taipei_date - 1 day.
+    """
+    from datetime import datetime as _dt, timedelta as _td
+    try:
+        et_date = (_dt.strptime(taipei_date_str, "%Y-%m-%d") - _td(days=1)).strftime("%Y-%m-%d")
+    except ValueError:
+        et_date = taipei_date_str
+    url = f"https://www.nba.com/games?date={et_date}"
     date_pattern = re.compile(r"(\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日)")
     replacement = f'<a href="{url}" target="_blank" rel="noopener" class="date-link">\\1</a>'
     return re.sub(

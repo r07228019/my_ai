@@ -4,13 +4,20 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from nba_api.live.nba.endpoints import boxscore, scoreboard
+from nba_api.live.nba.endpoints import boxscore
+from nba_api.stats.endpoints import scoreboardv3
 
 logger = logging.getLogger(__name__)
 
 
-def fetch_todays_games() -> list[dict]:
-    sb = scoreboard.ScoreBoard()
+def fetch_games_by_et_date(et_date: str) -> list[dict]:
+    """Fetch games on a specific ET date (YYYY-MM-DD) using ScoreboardV3.
+
+    V3 returns the same scoreboard/games shape as the live endpoint
+    (homeTeam/awayTeam/gameStatus/gameStatusText), so downstream code reuses
+    it without changes.
+    """
+    sb = scoreboardv3.ScoreboardV3(game_date=et_date, league_id="00")
     return sb.get_dict().get("scoreboard", {}).get("games", [])
 
 
