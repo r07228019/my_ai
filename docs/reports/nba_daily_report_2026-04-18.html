@@ -446,6 +446,77 @@
     @media (max-width: 640px) {
       .minor-col { display: none; }
     }
+
+    /* Scores block */
+    .scores-block { margin: 0 0 2rem; }
+    .scores-block h2 {
+      font-size: 1.2rem; font-weight: 600; margin: 0 0 0.85rem;
+      color: #f0f6fc; padding: 0 0 0.4rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .scores-block h2::before {
+      content: ''; position: absolute; left: 0; top: 15%; bottom: 30%;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-light));
+      border-radius: 2px;
+    }
+    .scores-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 0.85rem;
+    }
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .score-card:hover { border-color: rgba(99,102,241,0.45); transform: translateY(-1px); }
+    .score-matchup { display: flex; align-items: center; gap: 0.5rem; }
+    .score-team {
+      flex: 1; display: flex; align-items: center; gap: 0.55rem;
+      min-width: 0;
+    }
+    .score-team.away { flex-direction: row; }
+    .score-team.home { flex-direction: row-reverse; text-align: right; }
+    .score-team img {
+      width: 34px; height: 34px; object-fit: contain; flex-shrink: 0;
+      filter: drop-shadow(0 0 4px rgba(0,0,0,0.3));
+    }
+    .score-team-info { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+    .score-tri { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0.04em; }
+    .score-name { font-size: 0.9rem; font-weight: 600; color: #cdd9e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .score-value {
+      font-size: 1.5rem; font-weight: 700; color: var(--text-muted);
+      font-variant-numeric: tabular-nums; min-width: 2.4ch; text-align: center;
+    }
+    .score-value.winner { color: #f0f6fc; }
+    .score-status {
+      text-align: center; font-size: 0.7rem; font-weight: 600;
+      color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0 0.5rem;
+    }
+    .score-leaders {
+      border-top: 1px dashed var(--border); padding-top: 0.6rem;
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .score-leader {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.5rem; font-size: 0.8rem;
+    }
+    .score-leader-name {
+      color: #cdd9e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 1; min-width: 0;
+    }
+    .score-leader-name .tri { color: var(--text-muted); font-size: 0.72rem; margin-right: 0.35rem; }
+    .score-leader-stats {
+      font-variant-numeric: tabular-nums; color: var(--accent-light);
+      font-weight: 600; letter-spacing: 0.02em; flex-shrink: 0;
+    }
+    .score-leader-stats .stat-label { color: var(--text-muted); font-weight: 400; font-size: 0.68rem; margin-left: 0.15rem; }
   </style>
 </head>
 <body>
@@ -471,15 +542,16 @@
         <i class="ph ph-caret-down" id="history-caret" style="color:var(--text-muted);font-size:0.75rem;transition:transform 0.2s"></i>
       </div>
       <ul id="history-list">
-        <li style="animation-delay:0.05s"><a href="../index.html"><i class="ph ph-basketball"></i> 2026-04-25</a></li>
-        <li style="animation-delay:0.11s"><a href="../reports/nba_daily_report_2026-04-24.html"><i class="ph ph-basketball"></i> 2026-04-24</a></li>
-        <li style="animation-delay:0.17s"><a href="../reports/nba_daily_report_2026-04-23.html"><i class="ph ph-basketball"></i> 2026-04-23</a></li>
-        <li style="animation-delay:0.23s"><a href="../reports/nba_daily_report_2026-04-22.html"><i class="ph ph-basketball"></i> 2026-04-22</a></li>
-        <li style="animation-delay:0.29s"><a href="../reports/nba_daily_report_2026-04-21.html"><i class="ph ph-basketball"></i> 2026-04-21</a></li>
-        <li style="animation-delay:0.35s"><a href="../reports/nba_daily_report_2026-04-20.html"><i class="ph ph-basketball"></i> 2026-04-20</a></li>
-        <li style="animation-delay:0.41s"><a href="../reports/nba_daily_report_2026-04-19.html"><i class="ph ph-basketball"></i> 2026-04-19</a></li>
-        <li style="animation-delay:0.47s"><a href="../reports/nba_daily_report_2026-04-18.html" aria-current="page"><i class="ph ph-basketball"></i> 2026-04-18</a></li>
-        <li style="animation-delay:0.53s"><a href="../reports/nba_daily_report_2026-04-17.html"><i class="ph ph-basketball"></i> 2026-04-17</a></li>
+        <li style="animation-delay:0.05s"><a href="../index.html"><i class="ph ph-basketball"></i> 2026-04-26</a></li>
+        <li style="animation-delay:0.11s"><a href="../reports/nba_daily_report_2026-04-25.html"><i class="ph ph-basketball"></i> 2026-04-25</a></li>
+        <li style="animation-delay:0.17s"><a href="../reports/nba_daily_report_2026-04-24.html"><i class="ph ph-basketball"></i> 2026-04-24</a></li>
+        <li style="animation-delay:0.23s"><a href="../reports/nba_daily_report_2026-04-23.html"><i class="ph ph-basketball"></i> 2026-04-23</a></li>
+        <li style="animation-delay:0.29s"><a href="../reports/nba_daily_report_2026-04-22.html"><i class="ph ph-basketball"></i> 2026-04-22</a></li>
+        <li style="animation-delay:0.35s"><a href="../reports/nba_daily_report_2026-04-21.html"><i class="ph ph-basketball"></i> 2026-04-21</a></li>
+        <li style="animation-delay:0.41s"><a href="../reports/nba_daily_report_2026-04-20.html"><i class="ph ph-basketball"></i> 2026-04-20</a></li>
+        <li style="animation-delay:0.47s"><a href="../reports/nba_daily_report_2026-04-19.html"><i class="ph ph-basketball"></i> 2026-04-19</a></li>
+        <li style="animation-delay:0.53s"><a href="../reports/nba_daily_report_2026-04-18.html" aria-current="page"><i class="ph ph-basketball"></i> 2026-04-18</a></li>
+        <li style="animation-delay:0.59s"><a href="../reports/nba_daily_report_2026-04-17.html"><i class="ph ph-basketball"></i> 2026-04-17</a></li>
       </ul>
     </aside>
     <article class="content">

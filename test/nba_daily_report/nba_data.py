@@ -84,6 +84,57 @@ def build_games_payload(games: list[dict]) -> list[dict]:
     return payload
 
 
+def _top_scorer(players: list[dict]) -> dict | None:
+    """Return the player with highest points from a players list, or None."""
+    if not players:
+        return None
+    def pts(p):
+        try:
+            return int(p.get("points") or 0)
+        except (TypeError, ValueError):
+            return 0
+    return max(players, key=pts)
+
+
+def build_scores_summary(payload: list[dict]) -> list[dict]:
+    """Build a compact per-game summary (finals only) for the HTML scoreboard block.
+
+    Each entry: {gameId, home/away: {team, tricode, teamId, score, wins, losses, leader}}.
+    leader: {name, points, rebounds, assists, position} — top scorer on that team.
+    """
+    from nba_api.stats.static import teams as nba_teams
+    tri_to_id = {t["abbreviation"]: t["id"] for t in nba_teams.get_teams()}
+
+    summary = []
+    for entry in payload:
+        if entry.get("statusCode") != 3:
+            continue
+        out = {"gameId": entry.get("gameId"), "status": entry.get("status", "Final")}
+        for side in ("home", "away"):
+            s = entry.get(side, {})
+            leader_raw = _top_scorer(s.get("players") or [])
+            leader = None
+            if leader_raw:
+                leader = {
+                    "name": leader_raw.get("name"),
+                    "position": leader_raw.get("position") or "",
+                    "points": leader_raw.get("points"),
+                    "rebounds": leader_raw.get("rebounds"),
+                    "assists": leader_raw.get("assists"),
+                }
+            out[side] = {
+                "team": s.get("team"),
+                "tricode": s.get("tricode"),
+                "teamId": tri_to_id.get(s.get("tricode")),
+                "score": s.get("score"),
+                "wins": s.get("wins"),
+                "losses": s.get("losses"),
+                "leader": leader,
+            }
+        summary.append(out)
+    return summary
+
+
 def _current_season() -> str:
     """Return current NBA season string like '2025-26'."""
     now = datetime.now(ZoneInfo("US/Eastern"))

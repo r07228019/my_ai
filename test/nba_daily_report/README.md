@@ -8,8 +8,8 @@
 
 1. **抓資料**：呼叫 [`nba_api`](https://github.com/swar/nba_api) 的 Live Scoreboard 取得「美東時間當日」的所有比賽；對已完賽的場次再呼叫 Boxscore 取得球員個人數據（得分、籃板、助攻、抄截、阻攻、失誤、投籃命中率、正負值等）。
 2. **彙整報告**：把結構化資料丟給 Claude Opus 4.7，由模型依照固定格式撰寫戰報。
-3. **寫檔**：輸出到 `report/nba_daily_report_YYYY-MM-DD.md`（檔名中的日期為美東時間），`report/` 目錄會自動建立。
-4. **更新靜態網頁**：掃描最近 10 份報告，生成 `docs/index.html` 與 `docs/reports/*.html`，push 後由 GitHub Pages 自動部署。
+3. **寫檔**：輸出到 `report/nba_daily_report_YYYY-MM-DD.md`（檔名中的日期為美東時間），`report/` 目錄會自動建立。同時將已完賽場次的「最終比分 + 兩隊得分王」摘要存為 `report/scores_YYYY-MM-DD.json`，供靜態網頁渲染「各場比分」區塊使用。
+4. **更新靜態網頁**：掃描最近 10 份報告，生成 `docs/index.html` 與 `docs/reports/*.html`，push 後由 GitHub Pages 自動部署。若對應日期有 `scores_*.json`，會在 H1 標題下方額外渲染「各場比分」卡片（含隊徽、比分、兩隊得分王 PTS/REB/AST）。
 
 報告固定包含五個段落：
 
@@ -42,8 +42,10 @@ flowchart TD
     M -->|No| O
     O --> P[Claude Opus via Bedrock<br>彙整繁體中文戰報]
     P --> Q[寫入 report/ 目錄<br>nba_daily_report_日期.md]
+    Q --> Q2[寫入 scores_日期.json<br>比分 + 得分王摘要]
     K --> Q
-    Q --> R[生成 docs/ 靜態網頁<br>index.html + reports/*.html]
+    Q2 --> R[生成 docs/ 靜態網頁<br>index.html + reports/*.html]
+    Q --> R
     R --> S[結束]
 ```
 
@@ -173,6 +175,7 @@ python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 - **人事異動資料**：NBA API 並不提供交易、簽約、教練異動等資訊，因此系統提示要求模型在資料缺乏時明確註明，不可虛構。
 - **無賽事處理**：若當日沒有任何比賽，跳過 API 呼叫，直接輸出簡短說明。
 - **靜態網頁**：每次執行後自動更新 `docs/`，以 GitHub Pages 免費部署。網頁採深色主題，內含閱讀進度條、左側歷史導覽、RWD 支援，push 後約 1-2 分鐘生效。最多保留最近 10 份報告，舊檔自動刪除。
+- **各場比分區塊**：HTML 頁面會在 H1 下方自動渲染卡片式比分摘要，資料來源為 `report/scores_YYYY-MM-DD.json`。該檔由 `main.py` 在產報時生成（`build_scores_summary`），所以歷史報告沒有對應 JSON 就不會顯示此區塊 — 只影響新產出的日期。隊徽直接引用 NBA CDN (`cdn.nba.com/logos/nba/{teamId}/primary/L/logo.svg`)，team id 來自 `nba_api.stats.static.teams`。
 
 ## 已知限制
 

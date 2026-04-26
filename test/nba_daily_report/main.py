@@ -15,7 +15,7 @@ import anthropic
 import yaml
 
 from utils.aws_auth import setup_aws_session
-from .nba_data import build_games_payload, fetch_todays_games
+from .nba_data import build_games_payload, build_scores_summary, fetch_todays_games
 from .html_gen import generate_website
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
@@ -109,6 +109,14 @@ def main() -> int:
         out_path = output_dir / f"nba_daily_report_{report_date}.md"
         out_path.write_text(report, encoding="utf-8")
         print(f"[3/4] 已寫入：{out_path}")
+
+        scores = build_scores_summary(payload)
+        if scores:
+            scores_path = output_dir / f"scores_{report_date}.json"
+            scores_path.write_text(
+                json.dumps(scores, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            print(f"      已寫入比分摘要：{scores_path}")
 
         print(f"[4/4] 更新靜態網頁 ...")
         n = generate_website(output_dir, docs_dir)

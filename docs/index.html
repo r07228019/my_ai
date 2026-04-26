@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NBA Daily Report — 2026-04-25</title>
+  <title>NBA Daily Report — 2026-04-26</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%23818cf8'><path d='M63.6,46.39a103.48,103.48,0,0,1,52-21.65,4,4,0,0,1,4.45,4V120H95.7A103.77,103.77,0,0,0,63.38,52.44,4,4,0,0,1,63.6,46.39ZM46,64.07a103.51,103.51,0,0,0-21.29,51.46,4,4,0,0,0,4,4.47H79.63A87.86,87.86,0,0,0,51.89,63.59,4,4,0,0,0,46,64.07ZM192.4,46.39a103.48,103.48,0,0,0-52-21.65,4,4,0,0,0-4.45,4V120h24.3a103.77,103.77,0,0,1,32.32-67.56A4,4,0,0,0,192.4,46.39Zm38.86,69.14A103.51,103.51,0,0,0,210,64.07a4,4,0,0,0-5.86-.48A87.86,87.86,0,0,0,176.37,120h50.91A4,4,0,0,0,231.26,115.53ZM24.74,140.47A103.51,103.51,0,0,0,46,191.93a4,4,0,0,0,5.86.48A87.86,87.86,0,0,0,79.63,136H28.72A4,4,0,0,0,24.74,140.47ZM210,191.93a103.51,103.51,0,0,0,21.29-51.46,4,4,0,0,0-4-4.47H176.37a87.86,87.86,0,0,0,27.74,56.41A4,4,0,0,0,210,191.93ZM63.6,209.61a103.48,103.48,0,0,0,52,21.65,4,4,0,0,0,4.45-4V136H95.7a103.77,103.77,0,0,1-32.32,67.56A4,4,0,0,0,63.6,209.61ZM160.3,136H136v91.28a4,4,0,0,0,4.45,4,103.48,103.48,0,0,0,52-21.65,4,4,0,0,0,.22-6.05A103.77,103.77,0,0,1,160.3,136Z'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -446,6 +446,77 @@
     @media (max-width: 640px) {
       .minor-col { display: none; }
     }
+
+    /* Scores block */
+    .scores-block { margin: 0 0 2rem; }
+    .scores-block h2 {
+      font-size: 1.2rem; font-weight: 600; margin: 0 0 0.85rem;
+      color: #f0f6fc; padding: 0 0 0.4rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .scores-block h2::before {
+      content: ''; position: absolute; left: 0; top: 15%; bottom: 30%;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-light));
+      border-radius: 2px;
+    }
+    .scores-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 0.85rem;
+    }
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .score-card:hover { border-color: rgba(99,102,241,0.45); transform: translateY(-1px); }
+    .score-matchup { display: flex; align-items: center; gap: 0.5rem; }
+    .score-team {
+      flex: 1; display: flex; align-items: center; gap: 0.55rem;
+      min-width: 0;
+    }
+    .score-team.away { flex-direction: row; }
+    .score-team.home { flex-direction: row-reverse; text-align: right; }
+    .score-team img {
+      width: 34px; height: 34px; object-fit: contain; flex-shrink: 0;
+      filter: drop-shadow(0 0 4px rgba(0,0,0,0.3));
+    }
+    .score-team-info { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+    .score-tri { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0.04em; }
+    .score-name { font-size: 0.9rem; font-weight: 600; color: #cdd9e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .score-value {
+      font-size: 1.5rem; font-weight: 700; color: var(--text-muted);
+      font-variant-numeric: tabular-nums; min-width: 2.4ch; text-align: center;
+    }
+    .score-value.winner { color: #f0f6fc; }
+    .score-status {
+      text-align: center; font-size: 0.7rem; font-weight: 600;
+      color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0 0.5rem;
+    }
+    .score-leaders {
+      border-top: 1px dashed var(--border); padding-top: 0.6rem;
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .score-leader {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.5rem; font-size: 0.8rem;
+    }
+    .score-leader-name {
+      color: #cdd9e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 1; min-width: 0;
+    }
+    .score-leader-name .tri { color: var(--text-muted); font-size: 0.72rem; margin-right: 0.35rem; }
+    .score-leader-stats {
+      font-variant-numeric: tabular-nums; color: var(--accent-light);
+      font-weight: 600; letter-spacing: 0.02em; flex-shrink: 0;
+    }
+    .score-leader-stats .stat-label { color: var(--text-muted); font-weight: 400; font-size: 0.68rem; margin-left: 0.15rem; }
   </style>
 </head>
 <body>
@@ -471,15 +542,16 @@
         <i class="ph ph-caret-down" id="history-caret" style="color:var(--text-muted);font-size:0.75rem;transition:transform 0.2s"></i>
       </div>
       <ul id="history-list">
-        <li style="animation-delay:0.05s"><a href="index.html" aria-current="page"><i class="ph ph-basketball"></i> 2026-04-25</a></li>
-        <li style="animation-delay:0.11s"><a href="reports/nba_daily_report_2026-04-24.html"><i class="ph ph-basketball"></i> 2026-04-24</a></li>
-        <li style="animation-delay:0.17s"><a href="reports/nba_daily_report_2026-04-23.html"><i class="ph ph-basketball"></i> 2026-04-23</a></li>
-        <li style="animation-delay:0.23s"><a href="reports/nba_daily_report_2026-04-22.html"><i class="ph ph-basketball"></i> 2026-04-22</a></li>
-        <li style="animation-delay:0.29s"><a href="reports/nba_daily_report_2026-04-21.html"><i class="ph ph-basketball"></i> 2026-04-21</a></li>
-        <li style="animation-delay:0.35s"><a href="reports/nba_daily_report_2026-04-20.html"><i class="ph ph-basketball"></i> 2026-04-20</a></li>
-        <li style="animation-delay:0.41s"><a href="reports/nba_daily_report_2026-04-19.html"><i class="ph ph-basketball"></i> 2026-04-19</a></li>
-        <li style="animation-delay:0.47s"><a href="reports/nba_daily_report_2026-04-18.html"><i class="ph ph-basketball"></i> 2026-04-18</a></li>
-        <li style="animation-delay:0.53s"><a href="reports/nba_daily_report_2026-04-17.html"><i class="ph ph-basketball"></i> 2026-04-17</a></li>
+        <li style="animation-delay:0.05s"><a href="index.html" aria-current="page"><i class="ph ph-basketball"></i> 2026-04-26</a></li>
+        <li style="animation-delay:0.11s"><a href="reports/nba_daily_report_2026-04-25.html"><i class="ph ph-basketball"></i> 2026-04-25</a></li>
+        <li style="animation-delay:0.17s"><a href="reports/nba_daily_report_2026-04-24.html"><i class="ph ph-basketball"></i> 2026-04-24</a></li>
+        <li style="animation-delay:0.23s"><a href="reports/nba_daily_report_2026-04-23.html"><i class="ph ph-basketball"></i> 2026-04-23</a></li>
+        <li style="animation-delay:0.29s"><a href="reports/nba_daily_report_2026-04-22.html"><i class="ph ph-basketball"></i> 2026-04-22</a></li>
+        <li style="animation-delay:0.35s"><a href="reports/nba_daily_report_2026-04-21.html"><i class="ph ph-basketball"></i> 2026-04-21</a></li>
+        <li style="animation-delay:0.41s"><a href="reports/nba_daily_report_2026-04-20.html"><i class="ph ph-basketball"></i> 2026-04-20</a></li>
+        <li style="animation-delay:0.47s"><a href="reports/nba_daily_report_2026-04-19.html"><i class="ph ph-basketball"></i> 2026-04-19</a></li>
+        <li style="animation-delay:0.53s"><a href="reports/nba_daily_report_2026-04-18.html"><i class="ph ph-basketball"></i> 2026-04-18</a></li>
+        <li style="animation-delay:0.59s"><a href="reports/nba_daily_report_2026-04-17.html"><i class="ph ph-basketball"></i> 2026-04-17</a></li>
       </ul>
     </aside>
     <article class="content">
@@ -487,37 +559,39 @@
         <span class="hero-icon"><i class="ph-fill ph-basketball"></i></span>
         <div class="hero-text">
           <span class="hero-label">NBA Daily Report</span>
-          <span class="hero-date">2026 年 4 月 25 日</span>
+          <span class="hero-date">2026 年 4 月 26 日</span>
         </div>
       </div>
-      <h1>🏀 NBA 每日戰報 — <a href="https://www.nba.com/games?date=2026-04-25" target="_blank" rel="noopener" class="date-link">2026 年 4 月 25 日</a></h1>
-<p>季後賽戰火全面延燒，四組系列戰同日開打，焦點戰役上演驚奇與壓制並存的經典之夜。從灰狼替補爆走的奇蹟之夜，到雷霆再度靠著 SGA 無情碾壓，美東時間這一晚，球迷看足了好戲。</p>
-<h2>📋 當日戰況總覽</h2>
-<p>今日共有四場季後賽，系列賽局勢出現明顯分歧。<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">Minnesota Timberwolves</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 靠著替補奇兵 <a href="https://www.nba.com/player/1630245/ayo-dosunmu" target="_blank" rel="noopener" class="player-link">Ayo Dosunmu</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 生涯之夜重擊 <a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">Denver Nuggets</a> (<a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a>)，在系列賽取得 2-1 領先；<a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">Oklahoma City Thunder</a> (<a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">OKC</a>) 由 <a href="https://www.nba.com/player/1628983/shai-gilgeous-alexander" target="_blank" rel="noopener" class="player-link">Shai Gilgeous-Alexander</a> (<a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">OKC</a>) 率領繼續橫掃 <a href="https://www.nba.com/team/1610612756/suns" target="_blank" rel="noopener" class="team-link">Phoenix Suns</a> (<a href="https://www.nba.com/team/1610612756/suns" target="_blank" rel="noopener" class="team-link">PHX</a>)，成為唯一 3-0 的球隊，Suns 則被推上淘汰邊緣 🔥。東區方面，<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">Orlando Magic</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>) 力退 <a href="https://www.nba.com/team/1610612765/pistons" target="_blank" rel="noopener" class="team-link">Detroit Pistons</a> (<a href="https://www.nba.com/team/1610612765/pistons" target="_blank" rel="noopener" class="team-link">DET</a>) 在系列賽拉開 2-1，<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">New York Knicks</a> (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>) 則在客場狂電 <a href="https://www.nba.com/team/1610612737/hawks" target="_blank" rel="noopener" class="team-link">Atlanta Hawks</a> (<a href="https://www.nba.com/team/1610612737/hawks" target="_blank" rel="noopener" class="team-link">ATL</a>)，將戰績扳平 2-2。</p>
-<h2>👀 值得注意的看點</h2>
+      <h1>🏀 NBA 每日戰報 — <a href="https://www.nba.com/games?date=2026-04-26" target="_blank" rel="noopener" class="date-link">2026 年 4 月 26 日</a></h1><section class="scores-block"><h2><i class="ph ph-scoreboard"></i> 各場比分</h2><div class="scores-grid"><div class="score-card"><div class="score-matchup"><div class="score-team away"><img src="https://cdn.nba.com/logos/nba/1610612765/primary/L/logo.svg" alt="DET logo" loading="lazy"><div class="score-team-info"><span class="score-tri">DET</span><span class="score-name">Detroit Pistons</span></div></div><span class="score-value">105</span><span class="score-status">Final</span><span class="score-value winner">113</span><div class="score-team home"><img src="https://cdn.nba.com/logos/nba/1610612753/primary/L/logo.svg" alt="ORL logo" loading="lazy"><div class="score-team-info"><span class="score-tri">ORL</span><span class="score-name">Orlando Magic</span></div></div></div><div class="score-leaders"><div class="score-leader"><span class="score-leader-name"><span class="tri">DET</span>Cade Cunningham</span><span class="score-leader-stats">27<span class="stat-label">PTS</span> 5<span class="stat-label">REB</span> 9<span class="stat-label">AST</span></span></div><div class="score-leader"><span class="score-leader-name"><span class="tri">ORL</span>Paolo Banchero</span><span class="score-leader-stats">25<span class="stat-label">PTS</span> 12<span class="stat-label">REB</span> 9<span class="stat-label">AST</span></span></div></div></div><div class="score-card"><div class="score-matchup"><div class="score-team away"><img src="https://cdn.nba.com/logos/nba/1610612760/primary/L/logo.svg" alt="OKC logo" loading="lazy"><div class="score-team-info"><span class="score-tri">OKC</span><span class="score-name">Oklahoma City Thunder</span></div></div><span class="score-value winner">121</span><span class="score-status">Final</span><span class="score-value">109</span><div class="score-team home"><img src="https://cdn.nba.com/logos/nba/1610612756/primary/L/logo.svg" alt="PHX logo" loading="lazy"><div class="score-team-info"><span class="score-tri">PHX</span><span class="score-name">Phoenix Suns</span></div></div></div><div class="score-leaders"><div class="score-leader"><span class="score-leader-name"><span class="tri">OKC</span>Shai Gilgeous-Alexander</span><span class="score-leader-stats">42<span class="stat-label">PTS</span> 4<span class="stat-label">REB</span> 8<span class="stat-label">AST</span></span></div><div class="score-leader"><span class="score-leader-name"><span class="tri">PHX</span>Dillon Brooks</span><span class="score-leader-stats">33<span class="stat-label">PTS</span> 7<span class="stat-label">REB</span> 1<span class="stat-label">AST</span></span></div></div></div><div class="score-card"><div class="score-matchup"><div class="score-team away"><img src="https://cdn.nba.com/logos/nba/1610612752/primary/L/logo.svg" alt="NYK logo" loading="lazy"><div class="score-team-info"><span class="score-tri">NYK</span><span class="score-name">New York Knicks</span></div></div><span class="score-value winner">114</span><span class="score-status">Final</span><span class="score-value">98</span><div class="score-team home"><img src="https://cdn.nba.com/logos/nba/1610612737/primary/L/logo.svg" alt="ATL logo" loading="lazy"><div class="score-team-info"><span class="score-tri">ATL</span><span class="score-name">Atlanta Hawks</span></div></div></div><div class="score-leaders"><div class="score-leader"><span class="score-leader-name"><span class="tri">NYK</span>OG Anunoby</span><span class="score-leader-stats">22<span class="stat-label">PTS</span> 10<span class="stat-label">REB</span> 1<span class="stat-label">AST</span></span></div><div class="score-leader"><span class="score-leader-name"><span class="tri">ATL</span>CJ McCollum</span><span class="score-leader-stats">17<span class="stat-label">PTS</span> 1<span class="stat-label">REB</span> 3<span class="stat-label">AST</span></span></div></div></div><div class="score-card"><div class="score-matchup"><div class="score-team away"><img src="https://cdn.nba.com/logos/nba/1610612743/primary/L/logo.svg" alt="DEN logo" loading="lazy"><div class="score-team-info"><span class="score-tri">DEN</span><span class="score-name">Denver Nuggets</span></div></div><span class="score-value">96</span><span class="score-status">Final</span><span class="score-value winner">112</span><div class="score-team home"><img src="https://cdn.nba.com/logos/nba/1610612750/primary/L/logo.svg" alt="MIN logo" loading="lazy"><div class="score-team-info"><span class="score-tri">MIN</span><span class="score-name">Minnesota Timberwolves</span></div></div></div><div class="score-leaders"><div class="score-leader"><span class="score-leader-name"><span class="tri">DEN</span>Jamal Murray</span><span class="score-leader-stats">30<span class="stat-label">PTS</span> 5<span class="stat-label">REB</span> 5<span class="stat-label">AST</span></span></div><div class="score-leader"><span class="score-leader-name"><span class="tri">MIN</span>Ayo Dosunmu</span><span class="score-leader-stats">43<span class="stat-label">PTS</span> 4<span class="stat-label">REB</span> 1<span class="stat-label">AST</span></span></div></div></div></div></section>
+<p>季後賽戰火持續延燒，今日上演四場對決，從東岸到西岸都有精彩故事：衛冕熱門雷霆延續不敗金身、魔術於主場守土成功、尼克在客場痛擊老鷹，而灰狼則靠一位替補後衛的「生涯之夜」擊退衛冕冠軍。</p>
+<h2>📊 當日戰況總覽</h2>
+<p>今日四場比賽全為季後賽系列戰，主場球隊勝負各半。<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">Orlando Magic</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>) 在 <a href="https://www.nba.com/player/1631094/paolo-banchero" target="_blank" rel="noopener" class="player-link">Paolo Banchero</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>) 的準大三元帶領下，主場 113-105 擊退 <a href="https://www.nba.com/team/1610612765/pistons" target="_blank" rel="noopener" class="team-link">Detroit Pistons</a> (<a href="https://www.nba.com/team/1610612765/pistons" target="_blank" rel="noopener" class="team-link">DET</a>)，將系列賽戰成 2 勝 1 敗聽牌。西區焦點則是 <a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">Oklahoma City Thunder</a> (<a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">OKC</a>) 在鳳凰城 121-109 輕取 <a href="https://www.nba.com/team/1610612756/suns" target="_blank" rel="noopener" class="team-link">Phoenix Suns</a> (<a href="https://www.nba.com/team/1610612756/suns" target="_blank" rel="noopener" class="team-link">PHX</a>)，取得 3-0 的聽牌優勢，太陽則陷入被橫掃邊緣。<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">New York Knicks</a> (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>) 遠征亞特蘭大 114-98 擊敗 <a href="https://www.nba.com/team/1610612737/hawks" target="_blank" rel="noopener" class="team-link">Atlanta Hawks</a> (<a href="https://www.nba.com/team/1610612737/hawks" target="_blank" rel="noopener" class="team-link">ATL</a>) 扳平系列賽；<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">Minnesota Timberwolves</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 則靠 <a href="https://www.nba.com/player/1630245/ayo-dosunmu" target="_blank" rel="noopener" class="player-link">Ayo Dosunmu</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 爆炸演出 112-96 力克 <a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">Denver Nuggets</a> (<a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a>)，搶下 3-1 聽牌優勢。</p>
+<h2>🔥 值得注意的看點</h2>
 <ul>
-<li><strong><a href="https://www.nba.com/player/1630245/ayo-dosunmu" target="_blank" rel="noopener" class="player-link">Ayo Dosunmu</a> 板凳炸裂 43 分</strong>：灰狼替補之夜，Dosunmu (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 17 投 13 中、三分 5 中 5、罰球 12 中 12，砍下全場最高 43 分，完美彌補 <a href="https://www.nba.com/player/1630162/anthony-edwards" target="_blank" rel="noopener" class="player-link">Anthony Edwards</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 僅 5 分的低迷演出，成為改變系列賽走向的關鍵 X 因子 ⚡。</li>
-<li><strong>雷霆 3-0 鎖喉太陽</strong>：Thunder 系列賽尚未失手，Suns 則以 0-3 陷入淘汰絕境，下一戰若再失守將正式出局。<a href="https://www.nba.com/player/1626164/devin-booker" target="_blank" rel="noopener" class="player-link">Devin Booker</a> (<a href="https://www.nba.com/team/1610612756/suns" target="_blank" rel="noopener" class="team-link">PHX</a>) 僅 16 分的表現也令人憂心。</li>
-<li><strong>Knicks 絕地扳平</strong>：客場作戰的 Knicks 在第三戰最多領先達 24 分，系列賽扳成 2-2，主場優勢移轉，讓東區這組對決懸念重燃。</li>
-<li><strong>Jokic 大號兩雙仍吞敗</strong>：Nikola Jokic (<a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a>) 繳出 24 分 15 籃板 9 助攻，但球隊三分命中率僅 21.4%，外線崩盤讓 MVP 獨木難撐。</li>
-<li><strong>魔術穩守主場優勢</strong>：<a href="https://www.nba.com/player/1631094/paolo-banchero" target="_blank" rel="noopener" class="player-link">Paolo Banchero</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>) 與 <a href="https://www.nba.com/player/1630217/desmond-bane" target="_blank" rel="noopener" class="player-link">Desmond Bane</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>) 雙箭頭壓制 <a href="https://www.nba.com/player/1630595/cade-cunningham" target="_blank" rel="noopener" class="player-link">Cade Cunningham</a> (<a href="https://www.nba.com/team/1610612765/pistons" target="_blank" rel="noopener" class="team-link">DET</a>)，Orlando 在系列賽重新取得 2-1 領先。</li>
+<li><strong>雷霆橫掃在望</strong>：<a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">OKC</a> 季後賽已取得 3-0 的壓倒性領先，<a href="https://www.nba.com/player/1628983/shai-gilgeous-alexander" target="_blank" rel="noopener" class="player-link">Shai Gilgeous-Alexander</a> (<a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">OKC</a>) 用幾乎無解的表現展現 MVP 成色，太陽若無法在 G4 絕地反擊，將面臨被直落四橫掃的窘境。</li>
+<li><strong>衛冕冠軍陷入絕境</strong>：<a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a> 此戰三分 28 投僅 6 中（21.4%），全隊除了 <a href="https://www.nba.com/player/203999/nikola-jokic" target="_blank" rel="noopener" class="player-link">Nikola Jokić</a> (<a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a>) 與 <a href="https://www.nba.com/player/1627750/jamal-murray" target="_blank" rel="noopener" class="player-link">Jamal Murray</a> (<a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a>) 外火力全熄，系列賽 1-3 落後，被淘汰只剩一步之遙。</li>
+<li><strong>Dosunmu 的生涯之夜</strong>：替補出戰的 <a href="https://www.nba.com/player/1630245/ayo-dosunmu" target="_blank" rel="noopener" class="player-link">Ayo Dosunmu</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 在 <a href="https://www.nba.com/player/1630162/anthony-edwards" target="_blank" rel="noopener" class="player-link">Anthony Edwards</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 僅得 5 分的情況下挺身而出，成為灰狼勝出的絕對關鍵，堪稱本輪系列賽 X-Factor。</li>
+<li><strong>尼克二當家發光</strong>：在 <a href="https://www.nba.com/player/1628973/jalen-brunson" target="_blank" rel="noopener" class="player-link">Jalen Brunson</a> (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>) 失常 6 次失誤的夜晚，<a href="https://www.nba.com/player/1628384/og-anunoby" target="_blank" rel="noopener" class="player-link">OG Anunoby</a> (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>) 與 <a href="https://www.nba.com/player/1626157/karl-anthony-towns" target="_blank" rel="noopener" class="player-link">Karl-Anthony Towns</a> (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>) 聯手扛起進攻，順利把系列賽拉回 2-2 平手的懸念。</li>
+<li><strong>魔術聽牌、活塞危急</strong>：Banchero (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>) 與 <a href="https://www.nba.com/player/1630217/desmond-bane" target="_blank" rel="noopener" class="player-link">Desmond Bane</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>) 雙核火力全開，<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a> 拿下關鍵主場優勢，<a href="https://www.nba.com/team/1610612765/pistons" target="_blank" rel="noopener" class="team-link">DET</a> 則必須在下一戰止血否則將遭淘汰邊緣。</li>
 </ul>
-<h2>📊 關鍵數據</h2>
+<h2>📈 關鍵數據</h2>
 <ul>
-<li><strong><a href="https://www.nba.com/player/1628983/shai-gilgeous-alexander" target="_blank" rel="noopener" class="player-link">Shai Gilgeous-Alexander</a> (<a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">OKC</a>)</strong>：18 投 15 中，狂轟 42 分 8 助攻，真實命中率近乎變態，率雷霆拿下系列賽聽牌。</li>
-<li><strong><a href="https://www.nba.com/player/1628415/dillon-brooks" target="_blank" rel="noopener" class="player-link">Dillon Brooks</a> (<a href="https://www.nba.com/team/1610612756/suns" target="_blank" rel="noopener" class="team-link">PHX</a>)</strong>：全場最高 33 分 7 籃板，21 投 11 中、外線 9 中 4，是 Suns 唯一亮點。</li>
-<li><strong><a href="https://www.nba.com/player/1631094/paolo-banchero" target="_blank" rel="noopener" class="player-link">Paolo Banchero</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>)</strong>：25 分 12 籃板 9 助攻 3 抄截 2 阻攻，差一助攻即可達成大三元的準全能數據。</li>
-<li><strong><a href="https://www.nba.com/player/1626157/karl-anthony-towns" target="_blank" rel="noopener" class="player-link">Karl-Anthony Towns</a> (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>)</strong>：20 分 10 籃板 10 助攻，完成生涯罕見的<strong>大三元</strong>演出 🏆。</li>
-<li><strong><a href="https://www.nba.com/player/1630217/desmond-bane" target="_blank" rel="noopener" class="player-link">Desmond Bane</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>)</strong>：三分 9 投 7 中砍下 25 分，外線手感火燙。</li>
-<li><strong><a href="https://www.nba.com/player/1627750/jamal-murray" target="_blank" rel="noopener" class="player-link">Jamal Murray</a> (<a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a>)</strong>：30 分 5 助攻仍難救主，25 投 10 中效率吃緊。</li>
-<li><strong><a href="https://www.nba.com/player/1628976/wendell-carter-jr" target="_blank" rel="noopener" class="player-link">Wendell Carter Jr.</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>)</strong> 抓下 17 籃板，魔術全隊 63 籃板壓制活塞。</li>
+<li><strong><a href="https://www.nba.com/player/1628983/shai-gilgeous-alexander" target="_blank" rel="noopener" class="player-link">Shai Gilgeous-Alexander</a> (<a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">OKC</a>)</strong>：42 分 4 籃板 8 助攻，投籃 18 投 15 中、命中率 83%，罰球 12 罰 11 中，幾乎未失手。</li>
+<li><strong><a href="https://www.nba.com/player/1630245/ayo-dosunmu" target="_blank" rel="noopener" class="player-link">Ayo Dosunmu</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>)</strong>：替補 42 分鐘砍下 43 分 4 籃板，17 投 13 中、三分 5 投全中、罰球 12 罰 12 中，堪稱完美之夜。</li>
+<li><strong><a href="https://www.nba.com/player/1631094/paolo-banchero" target="_blank" rel="noopener" class="player-link">Paolo Banchero</a> (<a href="https://www.nba.com/team/1610612753/magic" target="_blank" rel="noopener" class="team-link">ORL</a>)</strong>：25 分 12 籃板 9 助攻 3 抄截 2 阻攻，僅差一次助攻就完成大三元。</li>
+<li><strong><a href="https://www.nba.com/player/203999/nikola-jokic" target="_blank" rel="noopener" class="player-link">Nikola Jokić</a> (<a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a>)</strong>：24 分 15 籃板 9 助攻 3 抄截 1 阻攻，三分差一個助攻即成大三元，惜未能挽救敗局。</li>
+<li><strong><a href="https://www.nba.com/player/1628415/dillon-brooks" target="_blank" rel="noopener" class="player-link">Dillon Brooks</a> (<a href="https://www.nba.com/team/1610612756/suns" target="_blank" rel="noopener" class="team-link">PHX</a>)</strong>：33 分、三分 9 投 4 中，為太陽陣中亮點但仍無力回天。</li>
+<li><strong><a href="https://www.nba.com/player/1626157/karl-anthony-towns" target="_blank" rel="noopener" class="player-link">Karl-Anthony Towns</a> (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>)</strong>：20 分 10 籃板 10 助攻完成大三元，只花 29 分鐘即達成。</li>
+<li><strong><a href="https://www.nba.com/player/1630595/cade-cunningham" target="_blank" rel="noopener" class="player-link">Cade Cunningham</a> (<a href="https://www.nba.com/team/1610612765/pistons" target="_blank" rel="noopener" class="team-link">DET</a>)</strong>：27 分 9 助攻但失誤高達 9 次，進攻效率令活塞吃虧。</li>
+<li><strong>團隊對比</strong>：<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a> 替補席攻下 76 分 vs. <a href="https://www.nba.com/team/1610612743/nuggets" target="_blank" rel="noopener" class="team-link">DEN</a> 替補 16 分，板凳深度差距巨大。</li>
 </ul>
-<h2>🎯 特殊事件</h2>
+<h2>⚡ 特殊事件</h2>
 <ul>
-<li><strong>Towns 大三元</strong>：Towns (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>) 繳出 20+10+10 的全能數據，是季後賽級別賽事中相當罕見的中鋒大三元壯舉。</li>
-<li><strong>Dosunmu 完美命中率之夜</strong>：Dosunmu (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 全場罰球 12 投全中、三分 5 投全中，效率值驚人，堪稱本日最具代表性的替補表演。</li>
-<li><strong><a href="https://www.nba.com/player/1630595/cade-cunningham" target="_blank" rel="noopener" class="player-link">Cade Cunningham</a> 9 次失誤</strong>：Cunningham (<a href="https://www.nba.com/team/1610612765/pistons" target="_blank" rel="noopener" class="team-link">DET</a>) 雖得 27 分 9 助攻，卻也出現高達 9 次失誤，成為活塞敗北的隱形推手。</li>
-<li>其餘比賽未出現延長賽、絕殺或重大爭議判決。</li>
+<li><a href="https://www.nba.com/team/1610612760/thunder" target="_blank" rel="noopener" class="team-link">OKC</a> 此戰取得系列賽 3-0 領先，距離直落四橫掃太陽僅一勝之遙，若成真，將是本季季後賽首場橫掃。</li>
+<li><a href="https://www.nba.com/player/1630245/ayo-dosunmu" target="_blank" rel="noopener" class="player-link">Ayo Dosunmu</a> (<a href="https://www.nba.com/team/1610612750/timberwolves" target="_blank" rel="noopener" class="team-link">MIN</a>) 替補砍下 43 分並三分球 5 投全中、罰球 12 罰全中，創下個人生涯代表作之一。</li>
+<li><a href="https://www.nba.com/player/1626157/karl-anthony-towns" target="_blank" rel="noopener" class="player-link">Karl-Anthony Towns</a> (<a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a>) 達成季後賽大三元，對內線中鋒而言是相當罕見的成就。</li>
+<li><a href="https://www.nba.com/team/1610612752/knicks" target="_blank" rel="noopener" class="team-link">NYK</a> 一度領先老鷹 24 分（90-66），幾乎從第二節起就控制了整場比賽節奏。</li>
+<li>本日無延長賽或絕殺事件發生。</li>
 </ul>
 <h2>📰 重要人事異動</h2>
 <p>本日資料未包含人事異動資訊。</p>

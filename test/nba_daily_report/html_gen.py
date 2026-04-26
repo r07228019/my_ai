@@ -1,6 +1,7 @@
 """Static website generation: HTML rendering and NBA.com link injection."""
 from __future__ import annotations
 
+import json
 import logging
 import re
 from datetime import datetime
@@ -8,6 +9,92 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 _PROJECT_DIR = Path(__file__).parent
+
+
+def _team_logo_url(team_id: int | None) -> str:
+    """Return NBA.com primary logo URL for a given team id (SVG)."""
+    return f"https://cdn.nba.com/logos/nba/{team_id}/primary/L/logo.svg" if team_id else ""
+
+
+def _scores_block_html(scores: list[dict]) -> str:
+    """Render the 各場比分 block — final score + team logos + top scorer per team."""
+    if not scores:
+        return ""
+
+    cards = []
+    for g in scores:
+        home, away = g.get("home") or {}, g.get("away") or {}
+        try:
+            hs, as_ = int(home.get("score") or 0), int(away.get("score") or 0)
+        except (TypeError, ValueError):
+            hs = as_ = 0
+        home_win_cls = " winner" if hs > as_ else ""
+        away_win_cls = " winner" if as_ > hs else ""
+
+        def leader_row(side: dict) -> str:
+            ld = side.get("leader")
+            if not ld:
+                return ""
+            tri = side.get("tricode") or ""
+            name = ld.get("name") or ""
+            pts = ld.get("points") if ld.get("points") is not None else "-"
+            reb = ld.get("rebounds") if ld.get("rebounds") is not None else "-"
+            ast = ld.get("assists") if ld.get("assists") is not None else "-"
+            return (
+                '<div class="score-leader">'
+                f'<span class="score-leader-name"><span class="tri">{tri}</span>{name}</span>'
+                '<span class="score-leader-stats">'
+                f'{pts}<span class="stat-label">PTS</span> '
+                f'{reb}<span class="stat-label">REB</span> '
+                f'{ast}<span class="stat-label">AST</span>'
+                '</span></div>'
+            )
+
+        def team_block(side: dict, pos_cls: str) -> str:
+            logo = _team_logo_url(side.get("teamId"))
+            tri = side.get("tricode") or ""
+            name = side.get("team") or ""
+            logo_img = f'<img src="{logo}" alt="{tri} logo" loading="lazy">' if logo else ""
+            return (
+                f'<div class="score-team {pos_cls}">{logo_img}'
+                '<div class="score-team-info">'
+                f'<span class="score-tri">{tri}</span>'
+                f'<span class="score-name">{name}</span>'
+                '</div></div>'
+            )
+
+        cards.append(
+            '<div class="score-card">'
+            '<div class="score-matchup">'
+            f'{team_block(away, "away")}'
+            f'<span class="score-value{away_win_cls}">{as_}</span>'
+            '<span class="score-status">Final</span>'
+            f'<span class="score-value{home_win_cls}">{hs}</span>'
+            f'{team_block(home, "home")}'
+            '</div>'
+            '<div class="score-leaders">'
+            f'{leader_row(away)}{leader_row(home)}'
+            '</div>'
+            '</div>'
+        )
+
+    return (
+        '<section class="scores-block">'
+        '<h2><i class="ph ph-scoreboard"></i> 各場比分</h2>'
+        f'<div class="scores-grid">{"".join(cards)}</div>'
+        '</section>'
+    )
+
+
+def _load_scores_summary(report_dir: Path, date_str: str) -> list[dict]:
+    path = report_dir / f"scores_{date_str}.json"
+    if not path.exists():
+        return []
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        logger.warning("讀取比分摘要失敗 %s: %s", path, e)
+        return []
 
 
 def _standings_html(standings: dict) -> str:
@@ -248,23 +335,19 @@ def generate_website(report_dir: Path, docs_dir: Path, keep_n: int = 10) -> int:
     player_map = _build_player_url_map()
     team_map = _build_team_url_map()
 
-    reports = [
-        {
-            "date": p.stem.replace("nba_daily_report_", ""),
-            "body": _linkify_report_date(
-                _linkify_teams(
-                    _linkify_players(
-                        md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"]),
-                        player_map,
-                    ),
-                    team_map,
-                ),
-                p.stem.replace("nba_daily_report_", ""),
-            ),
-            "filename": f"{p.stem}.html",
-        }
-        for p in md_files
-    ]
+    reports = []
+    for p in md_files:
+        date_str = p.stem.replace("nba_daily_report_", "")
+        body = md_lib.markdown(p.read_text(encoding="utf-8"), extensions=["tables", "fenced_code"])
+        body = _linkify_players(body, player_map)
+        body = _linkify_teams(body, team_map)
+        body = _linkify_report_date(body, date_str)
+
+        scores_html = _scores_block_html(_load_scores_summary(report_dir, date_str))
+        if scores_html:
+            body = re.sub(r"(</h1>)", r"\1" + scores_html, body, count=1)
+
+        reports.append({"date": date_str, "body": body, "filename": f"{p.stem}.html"})
 
     (docs_dir / "index.html").write_text(
         _render_page(f"NBA Daily Report — {reports[0]['date']}", reports[0]["body"], reports, reports[0]["date"], base_path=""),
