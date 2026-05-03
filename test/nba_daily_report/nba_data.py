@@ -77,6 +77,16 @@ def build_games_payload(games: list[dict]) -> list[dict]:
                 "losses": away.get("losses"),
             },
         }
+        series_text = g.get("seriesText") or ""
+        game_label = g.get("gameLabel") or ""
+        if series_text or game_label:
+            entry["series"] = {
+                "label": game_label,
+                "round": g.get("poRoundDesc") or "",
+                "gameNumber": g.get("seriesGameNumber") or "",
+                "seriesText": series_text,
+                "ifNecessary": bool(g.get("ifNecessary")),
+            }
         if g.get("gameStatus") == 3:
             try:
                 box = fetch_boxscore(game_id)

@@ -170,6 +170,7 @@ python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 
 - **時區策略**：網站**對外呈現一律使用台北時間** (Asia/Taipei)，包含檔名 (`nba_daily_report_YYYY-MM-DD.md`)、報告 H1、側邊欄、hero banner。內部抓資料時，以執行當下的台北日期往回減一天做為 ET 查詢日 (`ScoreboardV3(game_date=ET_DATE)`)，避免跨時區日期混淆造成重複。H1 日期連結指向的 `nba.com/games?date=` URL 仍使用 ET 日期（NBA 官方即以 ET 索引賽程）。
 - **資料來源**：抓特定 ET 日期用 `nba_api.stats.endpoints.scoreboardv3`（即使非當日亦可查），boxscore 仍走 live 端點。進行中或未開賽的比賽僅帶出比分與隊伍資訊，不拉 box score。
+- **季後賽系列賽資訊**：payload 會針對每場季後賽額外帶上 `series` 欄位（`label`、`round`、`gameNumber`、`seriesText`、`ifNecessary`），其中 `seriesText` 是官方格式的系列賽戰績字串（例如 `OKC leads series 3-1`、`PHI wins 4-3`），例行賽則不帶 `series`。系統提示詞會要求模型以 `seriesText` 為系列賽戰績的唯一事實來源，並在系列已結束時避免使用「聽牌、背水一戰」等仍在進行的語氣，以避免過去出現「4-0 絕對領先」「敗隊被逼入絕境」等誤述。
 - **模型選擇**：透過 AWS Bedrock 使用 `us.anthropic.claude-opus-4-7`，呼叫時採用 streaming 以避免長輸出 timeout。執行結束時會顯示 input/output token 用量，方便追蹤費用。
 - **預設 profile**：`config.yaml` 的 `default_profile` 讓使用者不需每次帶 `--profile` 參數，`--profile` 仍可覆蓋。
 - **MFA 支援**：透過 `utils/aws_auth.setup_aws_session()` 共用模組處理。MFA serial 來源決定取碼方式：環境變數 `AWS_MFA_SERIAL` → 以 `pyotp` 從 `AWS_MFA_SEED` 自動產生 MFA code；profile config 的 `mfa_serial` → 互動式詢問。兩者皆可，env 優先；最後透過 STS 取得臨時憑證。
