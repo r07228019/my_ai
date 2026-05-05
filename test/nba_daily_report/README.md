@@ -6,7 +6,7 @@
 
 執行後會依序完成：
 
-1. **抓資料**：以執行當下的**台北時間**取得當日日期，反推前一日的**美東日期** (Taipei − 1 日)，呼叫 [`nba_api`](https://github.com/swar/nba_api) 的 `ScoreboardV3` 抓該 ET 日期的所有比賽；對已完賽的場次再呼叫 Boxscore 取得球員個人數據（得分、籃板、助攻、抄截、阻攻、失誤、投籃命中率、正負值等）。
+1. **抓資料**：以執行當下的**台北時間**取得當日日期，反推前一日的**美東日期** (Taipei − 1 日)，呼叫 [`nba_api`](https://github.com/swar/nba_api) 的 `ScoreboardV3` 抓該 ET 日期的所有比賽；若 V3 回傳空列表（[已知上游資料問題](https://github.com/swar/nba_api/issues/596)），會自動 fallback 至 `ScoreboardV2` 並把結果正規化為 V3 shape。對已完賽的場次再呼叫 Boxscore 取得球員個人數據（得分、籃板、助攻、抄截、阻攻、失誤、投籃命中率、正負值等）。
 2. **彙整報告**：把結構化資料丟給 Claude Opus 4.7，由模型依照固定格式撰寫戰報；標題日期一律使用**台北時間**當日。
 3. **寫檔**：輸出到 `report/nba_daily_report_YYYY-MM-DD.md`（檔名中的日期為**台北時間**），`report/` 目錄會自動建立。同時將已完賽場次的「最終比分 + 兩隊得分王」摘要存為 `report/scores_YYYY-MM-DD.json`（台北日期），供靜態網頁渲染「各場比分」區塊使用。
 4. **更新靜態網頁**：掃描最近 10 份報告，生成 `docs/index.html` 與 `docs/reports/*.html`，push 後由 GitHub Pages 自動部署。檔名、H1 日期、側邊欄皆使用台北日期；H1 內的日期連結則指向 NBA.com 對應的美東日期 (`nba.com/games?date=ET_DATE`)。若對應日期有 `scores_*.json`，會在 H1 標題下方額外渲染「各場比分」卡片（含隊徽、比分、兩隊得分王 PTS/REB/AST）。
@@ -33,7 +33,10 @@ flowchart TD
     G --> H
     E -->|No| H[取得台北時間當日日期<br>反推 ET 日期 = 台北 − 1 日]
     H --> I[NBA API: ScoreboardV3<br>按 ET 日期取比賽列表]
-    I --> J{有比賽?}
+    I --> I2{V3 回傳 0 場?}
+    I2 -->|Yes| I3[Fallback: ScoreboardV2<br>正規化為 V3 shape]
+    I2 -->|No| J
+    I3 --> J{有比賽?}
     J -->|No| K[產生「本日無賽事」報告]
     J -->|Yes| L[遍歷每場比賽]
     L --> M{已完賽?}
@@ -169,7 +172,7 @@ python -m test.nba_daily_report.main --profile other-profile --region us-west-2
 ## 設計備註
 
 - **時區策略**：網站**對外呈現一律使用台北時間** (Asia/Taipei)，包含檔名 (`nba_daily_report_YYYY-MM-DD.md`)、報告 H1、側邊欄、hero banner。內部抓資料時，以執行當下的台北日期往回減一天做為 ET 查詢日 (`ScoreboardV3(game_date=ET_DATE)`)，避免跨時區日期混淆造成重複。H1 日期連結指向的 `nba.com/games?date=` URL 仍使用 ET 日期（NBA 官方即以 ET 索引賽程）。
-- **資料來源**：抓特定 ET 日期用 `nba_api.stats.endpoints.scoreboardv3`（即使非當日亦可查），boxscore 仍走 live 端點。進行中或未開賽的比賽僅帶出比分與隊伍資訊，不拉 box score。
+- **資料來源**：抓特定 ET 日期優先用 `nba_api.stats.endpoints.scoreboardv3`（即使非當日亦可查）；若 V3 回傳 0 場（目前 2025-26 季後賽期間 V3 偶有此問題，見 [nba_api#596](https://github.com/swar/nba_api/issues/596)），會自動 fallback 至 `scoreboardv2` 並把 `GameHeader + LineScore + SeriesStandings` 三個 resultSet 正規化為 V3 的 `games` shape，下游程式不需調整。boxscore 仍走 live 端點。進行中或未開賽的比賽僅帶出比分與隊伍資訊，不拉 box score。V2 fallback 無法還原 `gameLabel` / `poRoundDesc` / `seriesGameNumber`，會留空；`seriesText` 由 `SeriesStandings` 的 HOME_TEAM_WINS/LOSSES + SERIES_LEADER 組合而成。
 - **季後賽系列賽資訊**：payload 會針對每場季後賽額外帶上 `series` 欄位（`label`、`round`、`gameNumber`、`seriesText`、`ifNecessary`），其中 `seriesText` 是官方格式的系列賽戰績字串（例如 `OKC leads series 3-1`、`PHI wins 4-3`），例行賽則不帶 `series`。系統提示詞會要求模型以 `seriesText` 為系列賽戰績的唯一事實來源，並在系列已結束時避免使用「聽牌、背水一戰」等仍在進行的語氣，以避免過去出現「4-0 絕對領先」「敗隊被逼入絕境」等誤述。
 - **模型選擇**：透過 AWS Bedrock 使用 `us.anthropic.claude-opus-4-7`，呼叫時採用 streaming 以避免長輸出 timeout。執行結束時會顯示 input/output token 用量，方便追蹤費用。
 - **預設 profile**：`config.yaml` 的 `default_profile` 讓使用者不需每次帶 `--profile` 參數，`--profile` 仍可覆蓋。

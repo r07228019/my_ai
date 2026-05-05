@@ -2,23 +2,139 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from nba_api.live.nba.endpoints import boxscore
-from nba_api.stats.endpoints import scoreboardv3
+from nba_api.stats.endpoints import scoreboardv2, scoreboardv3
 
 logger = logging.getLogger(__name__)
 
 
 def fetch_games_by_et_date(et_date: str) -> list[dict]:
-    """Fetch games on a specific ET date (YYYY-MM-DD) using ScoreboardV3.
+    """Fetch games on a specific ET date (YYYY-MM-DD).
 
-    V3 returns the same scoreboard/games shape as the live endpoint
-    (homeTeam/awayTeam/gameStatus/gameStatusText), so downstream code reuses
-    it without changes.
+    Primary: ScoreboardV3 — preferred, returns the same shape as the live
+    endpoint so downstream code can reuse it without changes.
+    Fallback: ScoreboardV2 — used when V3 returns an empty list even though
+    games did occur (a known upstream data issue; see nba_api#596).
+    V2's result sets are normalized into the V3 `games` shape before return.
     """
     sb = scoreboardv3.ScoreboardV3(game_date=et_date, league_id="00")
-    return sb.get_dict().get("scoreboard", {}).get("games", [])
+    games = sb.get_dict().get("scoreboard", {}).get("games", [])
+    if games:
+        return games
+
+    v2_games = _fetch_games_v2(et_date)
+    if v2_games:
+        logger.warning(
+            "ScoreboardV3 回傳 0 場 (ET=%s)，已 fallback 至 ScoreboardV2，取得 %d 場",
+            et_date, len(v2_games),
+        )
+    return v2_games
+
+
+def _fetch_games_v2(et_date: str) -> list[dict]:
+    """Fetch games via ScoreboardV2 and normalize to V3 `games` shape.
+
+    V2 expects MM/DD/YYYY; result comes back as multiple resultSets which we
+    stitch together (GameHeader + LineScore + SeriesStandings) into the V3
+    per-game dict used downstream.
+    """
+    dt = datetime.strptime(et_date, "%Y-%m-%d")
+    v2_date = dt.strftime("%m/%d/%Y")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        raw = scoreboardv2.ScoreboardV2(game_date=v2_date, league_id="00").get_dict()
+    result_sets = {rs["name"]: rs for rs in raw.get("resultSets", [])}
+
+    def rows_as_dicts(name: str) -> list[dict]:
+        rs = result_sets.get(name) or {}
+        return [dict(zip(rs.get("headers", []), row)) for row in rs.get("rowSet", [])]
+
+    headers = rows_as_dicts("GameHeader")
+    if not headers:
+        return []
+    line_by_game: dict[str, list[dict]] = {}
+    for ls in rows_as_dicts("LineScore"):
+        line_by_game.setdefault(ls["GAME_ID"], []).append(ls)
+    series_by_game = {s["GAME_ID"]: s for s in rows_as_dicts("SeriesStandings")}
+
+    games = []
+    seen_gids: set[str] = set()
+    for h in headers:
+        gid = h["GAME_ID"]
+        if gid in seen_gids:
+            continue
+        seen_gids.add(gid)
+        home_id, away_id = h["HOME_TEAM_ID"], h["VISITOR_TEAM_ID"]
+        lines = {ls["TEAM_ID"]: ls for ls in line_by_game.get(gid, [])}
+        home_ls, away_ls = lines.get(home_id, {}), lines.get(away_id, {})
+
+        def team_block(ls: dict) -> dict:
+            wins, losses = _parse_wins_losses(ls.get("TEAM_WINS_LOSSES"))
+            return {
+                "teamId": ls.get("TEAM_ID"),
+                "teamCity": ls.get("TEAM_CITY_NAME") or "",
+                "teamName": ls.get("TEAM_NAME") or "",
+                "teamTricode": ls.get("TEAM_ABBREVIATION") or "",
+                "score": ls.get("PTS"),
+                "wins": wins,
+                "losses": losses,
+            }
+
+        entry = {
+            "gameId": gid,
+            "gameStatus": h.get("GAME_STATUS_ID"),
+            "gameStatusText": h.get("GAME_STATUS_TEXT", ""),
+            "arena": {"arenaName": h.get("ARENA_NAME") or ""},
+            "homeTeam": team_block(home_ls),
+            "awayTeam": team_block(away_ls),
+        }
+
+        series = series_by_game.get(gid)
+        if series is not None:
+            entry.update(_series_fields_from_v2(series, entry["homeTeam"], entry["awayTeam"]))
+        games.append(entry)
+    return games
+
+
+def _parse_wins_losses(text: str | None) -> tuple[int | None, int | None]:
+    if not text or "-" not in text:
+        return None, None
+    try:
+        w, l = text.split("-", 1)
+        return int(w), int(l)
+    except ValueError:
+        return None, None
+
+
+def _series_fields_from_v2(series: dict, home: dict, away: dict) -> dict:
+    """Derive V3-style series fields from V2 SeriesStandings row.
+
+    V2 only exposes HOME_TEAM_WINS/LOSSES and SERIES_LEADER (team city or
+    'Tied'), so gameLabel/poRoundDesc/seriesGameNumber can't be recovered —
+    leave them blank; downstream only treats `seriesText` as authoritative.
+    """
+    hw = series.get("HOME_TEAM_WINS") or 0
+    hl = series.get("HOME_TEAM_LOSSES") or 0
+    if not hw and not hl:
+        return {}
+    leader = (series.get("SERIES_LEADER") or "").strip()
+    if leader.lower() == "tied":
+        series_text = f"Tied {hw}-{hl}"
+    else:
+        leader_tri = home["teamTricode"] if leader == home.get("teamCity") else away["teamTricode"]
+        max_w, min_w = max(hw, hl), min(hw, hl)
+        verb = "wins" if max_w >= 4 else "leads"
+        series_text = f"{leader_tri} {verb} {max_w}-{min_w}"
+    return {
+        "gameLabel": "",
+        "poRoundDesc": "",
+        "seriesGameNumber": "",
+        "seriesText": series_text,
+        "ifNecessary": False,
+    }
 
 
 def fetch_boxscore(game_id: str) -> dict:
