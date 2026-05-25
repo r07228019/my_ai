@@ -6,9 +6,24 @@ import warnings
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from nba_api.live.nba.endpoints import boxscore
+from nba_api.live.nba.library.http import NBALiveHTTP
 from nba_api.stats.endpoints import scoreboardv2, scoreboardv3
 
 logger = logging.getLogger(__name__)
+
+# nba_api 內建 UA 是 Chrome 87 (2020)，已被 cdn.nba.com 封鎖回 403。
+# 覆寫成現代 UA + Referer 才能正常取得 live boxscore。
+NBALiveHTTP.headers = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://www.nba.com/",
+    "Origin": "https://www.nba.com",
+    "Host": "cdn.nba.com",
+}
 
 
 def fetch_games_by_et_date(et_date: str) -> list[dict]:
